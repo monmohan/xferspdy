@@ -45,7 +45,6 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 			if err == io.EOF {
 				fmt.Println("File read complete")
 			} else {
-
 				log.Fatal(err)
 
 			}
