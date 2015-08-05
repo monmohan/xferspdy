@@ -48,7 +48,13 @@ func (s *State) UpdateWindow(nb byte) uint32 {
 	s.window = s.window[1:]
 	s.s1 = s.s1 + uint32(nb) - uint32(x)
 	s.s1 %= mod
-	s.s2 = s.s2 + s.s1 - (uint32(len(s.window)) * uint32(x)) - 1
+	b := (uint32(len(s.window)) * uint32(x)) + 1
+	a := s.s2 + s.s1
+	for b > a {
+		fmt.Printf("b %d greater than a %d\n", b, a)
+		a += mod
+	}
+	s.s2 = a - b
 	s.s2 %= mod
 	fmt.Printf("Update window: s1 %d s2 %d\n", s.s1, s.s2)
 	return uint32(s.s2<<16 | s.s1)

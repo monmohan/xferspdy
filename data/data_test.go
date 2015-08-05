@@ -32,7 +32,7 @@ func TestRollingChecksum(t *testing.T) {
 	}
 
 	mid := len(data) >> 1
-	mid = 1000
+	mid = 1100
 
 	num_iter := 1
 	st := 0
