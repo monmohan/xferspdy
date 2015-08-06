@@ -35,10 +35,9 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 	signature := Signature{Blocksz: blocksize}
 	for err == nil {
 		n, err = file.Read(bufz)
-		fmt.Printf("Read file %d bytes read , error= %v \n", n, err)
+		//fmt.Printf("Read file %d bytes read , error= %v \n", n, err)
 		if err == nil {
 			block = Block{Start: start, End: start + n - 1, Checksum32: adler32.Checksum(bufz[0:n]), Sha256hash: sha256.Sum256(bufz[0:n])}
-			fmt.Printf("Block %v\n", block)
 			signature.BlockMap = append(signature.BlockMap, block)
 			start = block.End + 1
 		} else {

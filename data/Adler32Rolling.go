@@ -1,3 +1,8 @@
+/**
+The core algorithm is same as provided by adler32 implementation of golang
+The additional code is to provide a mechanism to compute the checksum of a rolling window
+in single byte increments by using the hash parts computed earlier
+**/
 package data
 
 import (
@@ -42,7 +47,7 @@ func Checksum(p []byte) (uint32, *State) {
 }
 
 func (s *State) UpdateWindow(nb byte) uint32 {
-	fmt.Printf("Update window init : s1 %d s2 %d byte appended %d \n", s.s1, s.s2, nb)
+	//fmt.Printf("Update window init : s1 %d s2 %d byte appended %d \n", s.s1, s.s2, nb)
 	s.window = append(s.window, nb)
 	x := s.window[0]
 	s.window = s.window[1:]
@@ -51,11 +56,11 @@ func (s *State) UpdateWindow(nb byte) uint32 {
 	b := (uint32(len(s.window)) * uint32(x)) + 1
 	a := s.s2 + s.s1
 	for b > a {
-		fmt.Printf("b %d greater than a %d\n", b, a)
+		//fmt.Printf("b %d greater than a %d\n", b, a)
 		a += mod
 	}
 	s.s2 = a - b
 	s.s2 %= mod
-	fmt.Printf("Update window: s1 %d s2 %d\n", s.s1, s.s2)
+	//fmt.Printf("Update window: s1 %d s2 %d\n", s.s1, s.s2)
 	return uint32(s.s2<<16 | s.s1)
 }

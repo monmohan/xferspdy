@@ -11,15 +11,15 @@ import (
 )
 
 func TestSignatureCreate(t *testing.T) {
-	t.Skip("not now..")
-	sign := NewSignature("/msingh/projects/genknow/gitcheatsheet", 16)
-	fmt.Printf(" %v\n", *sign)
+	//t.Skip("not now..")
+	sign := NewSignature("../testdata/Adler32testresource", 2048)
+	fmt.Printf(" %v\n", sign.Blocksz)
 
 }
 
 func TestRollingChecksum(t *testing.T) {
 	fmt.Println("testing checksum")
-	file, e := os.Open("/msingh/projects/gocode/testdata/Adler32testresource")
+	file, e := os.Open("../testdata/Adler32testresource")
 	defer file.Close()
 
 	if e != nil {
@@ -32,7 +32,7 @@ func TestRollingChecksum(t *testing.T) {
 	}
 
 	mid := len(data) >> 1
-	mid = 1100
+	//mid = 1100
 
 	num_iter := 1
 	st := 0
