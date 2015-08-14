@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
-	testFlag()
-	testBufIO()
+	//testFlag()
+	//testBufIO()
+	testSlice()
 }
 
 func testFlag() {
@@ -32,4 +33,16 @@ func testBufIO() {
 	n, _ := bufreader.Read(few)
 	fmt.Printf("number of bytes read %d ", n)
 	fmt.Println(string(few))
+}
+
+func testSlice() {
+	var d []int
+	updSlice(&d)
+	fmt.Printf("d %v\n", d)
+
+}
+
+func updSlice(s *[]int) {
+	*s = append(*s, 1)
+
 }

@@ -23,7 +23,7 @@ type Block struct {
 }
 
 func (b Block) String() string {
-	return fmt.Sprintf("Start %d End %d adler %d data %v\n", b.Start, b.End, b.Checksum32, b.data)
+	return fmt.Sprintf("Start %d End %d adler %d data %v isdatablock %v \n", b.Start, b.End, b.Checksum32, b.data, b.isdatablock)
 }
 
 func NewSignature(filename string, blocksize uint32) *Signature {
