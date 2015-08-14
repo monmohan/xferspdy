@@ -1,2 +1,2 @@
 # xferspdy
-Faster data transfer and peer to peer 
+Faster data transfer, binary deltas, and peer to peer 
