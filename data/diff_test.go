@@ -2,6 +2,8 @@ package data
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"testing"
 )
 
@@ -39,6 +41,42 @@ func TestDelta2ByteExtraInMid(t *testing.T) {
 	sign = NewSignature(ofname, 8)
 
 	delta = NewDiff(nfname, *sign)
+	fmt.Printf("Delta: %v\n", delta)
+
+}
+
+var alphabets = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func TestSameBlocks(t *testing.T) {
+	fmt.Println("==TestSameBlocks==")
+	blksz := 32
+	basesz := 1000
+	basefile := "../testdata/samplefile"
+	bfile, _ := os.Open(basefile)
+
+	defer bfile.Close()
+	ofname := "../testdata/TestSameBlocks"
+	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 777)
+	io.CopyN(ofile, bfile, int64(basesz))
+	ofile.Close()
+
+	sign := NewSignature(ofname, uint32(blksz))
+	fmt.Printf("Signature : %v\n", sign)
+	if len(sign.BlockMap) != (basesz/blksz)+1 {
+		t.Errorf("bad signature, length error %v", len(sign.BlockMap))
+		t.FailNow()
+	}
+
+	delta := NewDiff(ofname, *sign)
+
+	for i, blk := range delta {
+
+		if blk.Start != sign.BlockMap[i].Start && blk.End != sign.BlockMap[i].End {
+			t.Error("failed diff %v \n at blk %v ", delta, blk)
+		} else {
+			t.Log("Diff and signature block match,\n", blk)
+		}
+	}
 	fmt.Printf("Delta: %v\n", delta)
 
 }
