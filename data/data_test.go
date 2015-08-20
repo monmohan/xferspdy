@@ -19,7 +19,7 @@ func TestSignatureCreate(t *testing.T) {
 
 func TestRollingChecksum(t *testing.T) {
 	fmt.Println("testing checksum")
-	file, e := os.Open("../testdata/Adler32testresource")
+	file, e := os.Open("../testdata/samplefile")
 	defer file.Close()
 
 	if e != nil {
@@ -31,19 +31,19 @@ func TestRollingChecksum(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	mid := len(data) >> 1
+	mid := 1024
 	//mid = 1100
 
-	num_iter := 1
+	num_iter := 100
 	st := 0
 	for num_iter > 0 {
 		x := data[st:mid]
 		libsum := adler32.Checksum(x)
 		libroll, state := Checksum(x)
-
+		fmt.Printf("Libsum %d libroll %d \n", libsum, libroll)
 		if !reflect.DeepEqual(libsum, libroll) {
 			fmt.Printf("Libsum %d libroll %d \n", libsum, libroll)
-			t.Fail()
+			t.FailNow()
 		}
 		st += 1
 		x = data[st : mid+1]
@@ -52,7 +52,7 @@ func TestRollingChecksum(t *testing.T) {
 
 		if !reflect.DeepEqual(libsum, libroll) {
 			fmt.Printf("Libsum %d libroll %d \n", libsum, libroll)
-			t.Fail()
+			t.FailNow()
 		}
 		num_iter -= 1
 		mid += 1

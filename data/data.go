@@ -39,9 +39,9 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 	var err error = nil
 	var block Block
 	signature := Signature{Blocksz: blocksize}
+
 	for err == nil {
 		n, err = file.Read(bufz)
-		//tfmt.Printf("Read file %d bytes read , error= %v \n", n, err)
 		if err == nil {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
