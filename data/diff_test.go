@@ -46,27 +46,21 @@ func TestDelta2ByteExtraInMid(t *testing.T) {
 
 }
 
-var alphabets = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
 func TestSameBlocks(t *testing.T) {
 	fmt.Println("==TestSameBlocks==")
-	//t.SkipNow()
-	blksz := 32
-	basesz := 1000
+
+	blksz := 1024
+	basesz := 10000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
 	ofname := "../testdata/TestSameBlocks"
-	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 777)
+	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	ofile.Close()
 
 	sign := NewSignature(ofname, uint32(blksz))
-	if len(sign.BlockMap) != (basesz/blksz)+1 {
-		t.Errorf("bad signature, length error %v", len(sign.BlockMap))
-		t.FailNow()
-	}
 
 	delta := NewDiff(ofname, *sign)
 
@@ -87,8 +81,8 @@ func TestSameBlocks(t *testing.T) {
 
 func TestFewBlocksWithMorebytes(t *testing.T) {
 	fmt.Println("==TestFewBlocksWithMorebytes1===")
-	blksz := 32
-	basesz := 2002
+	blksz := 1024
+	basesz := 20000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
@@ -100,6 +94,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	ofile.Close()
 
 	sign := NewSignature(ofname, uint32(blksz))
+	fmt.Printf("Signature for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
@@ -137,8 +132,9 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 
 	for i, blk := range delta {
 		fmt.Printf("Comparing Block number %d , blk %v \n", i, blk)
-		if blk.Start != sign.BlockMap[i].Start && blk.End != sign.BlockMap[i].End {
-			t.Fatalf("failed diff %v \n at blk %v ", delta, blk)
+		_, matched := matchBlock(blk.Checksum32, blk.Sha256hash, *sign)
+		if !matched {
+			t.Fatalf("Failed, delta block doesn't match %v \n", blk)
 		}
 	}
 

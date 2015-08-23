@@ -26,6 +26,7 @@ type State struct {
 }
 
 func Checksum(p []byte) (uint32, *State) {
+	fmt.Printf("Length of buffer %d \n Calc checksum for \n %v \n", len(p), p)
 	s1, s2 := uint32(1&0xffff), uint32(1>>16)
 	fmt.Printf("Init: s1 %d s2 %d\n", s1, s2)
 	orig := p

@@ -19,7 +19,7 @@ func TestSignatureCreate(t *testing.T) {
 
 func TestRollingChecksum(t *testing.T) {
 	fmt.Println("testing checksum")
-	file, e := os.Open("../testdata/samplefile")
+	file, e := os.Open("../testdata/TestFewBlocksWithMorebytes_1")
 	defer file.Close()
 
 	if e != nil {
@@ -31,11 +31,11 @@ func TestRollingChecksum(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	mid := 1024
+	mid := 5000
 	//mid = 1100
 
-	num_iter := 100
-	st := 0
+	num_iter := 1
+	st := 3076
 	for num_iter > 0 {
 		x := data[st:mid]
 		libsum := adler32.Checksum(x)

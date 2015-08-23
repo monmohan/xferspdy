@@ -1,9 +1,9 @@
 package data
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"reflect"
@@ -17,13 +17,13 @@ func NewDiff(filename string, sign Signature) []Block {
 	}
 
 	finfo, _ := file.Stat()
-	r := bufio.NewReader(file)
+
 	var delta []Block
-	processBlock(r, 0, finfo.Size(), sign, &delta)
+	processBlock(file, 0, finfo.Size(), sign, &delta)
 	return delta
 }
 
-func processBlock(r *bufio.Reader, rptr int64, filesz int64, s Signature, delta *[]Block) {
+func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]Block) {
 
 	blksz := int64(s.Blocksz)
 	brem := int64(blksz)
@@ -37,8 +37,8 @@ func processBlock(r *bufio.Reader, rptr int64, filesz int64, s Signature, delta 
 	}
 
 	buf := make([]byte, brem)
-	n, err := r.Read(buf)
-	if err != nil {
+	n, err := io.ReadFull(r, buf)
+	if err != nil || int64(n) != brem {
 		fmt.Printf("Error %v read %d bytes", err, n)
 	}
 	//fmt.Printf("Buffer read %v \n", buf)
@@ -57,7 +57,7 @@ func processBlock(r *bufio.Reader, rptr int64, filesz int64, s Signature, delta 
 
 }
 
-func processRolling(r *bufio.Reader, st *State, rptr int64, filesz int64, s Signature, delta *[]Block) {
+func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signature, delta *[]Block) {
 
 	diff := *delta
 	db := &diff[len(diff)-1]
@@ -73,12 +73,13 @@ func processRolling(r *bufio.Reader, st *State, rptr int64, filesz int64, s Sign
 	}
 	fb := st.window[0]
 	db.data = append(db.data, fb)
-	b, e := r.ReadByte()
+	b := make([]byte, 1)
+	_, e := io.ReadFull(r, b)
 	if e != nil {
 		log.Fatal(e)
 	}
 	rptr += 1
-	checksum := st.UpdateWindow(b)
+	checksum := st.UpdateWindow(b[0])
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(st.window), s)
 	if matched {
 		*delta = append(diff, matchblock)
