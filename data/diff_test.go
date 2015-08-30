@@ -84,12 +84,12 @@ func TestSameBlocks(t *testing.T) {
 }
 
 func TestFewBlocksWithMorebytes(t *testing.T) {
-	fmt.Println("==TestFewBlocksWithMorebytes===")
+	fmt.Println("==TestFewBlocksWithMorebytes, add bytes in begin and end of file===\n")
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 
 	fmt.Println("log v value ", flag.Lookup("v").Value)
-	blksz := 16 * 2048
+	blksz := 64 * 1024
 	basesz := 200000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
@@ -102,7 +102,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	ofile.Close()
 
 	sign := NewSignature(ofname, uint32(blksz))
-	glog.V(2).Infof("Signature for file %v\n %v\n", ofname, *sign)
+	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
@@ -113,8 +113,13 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	nfile.Close()
 
 	delta := NewDiff(nfname, *sign)
+	glog.V(2).Infof("Resulting Delta %v\n", delta)
+	additionalblks := 1
+	if basesz%blksz == 0 {
+		additionalblks = 2
+	}
 
-	if len(delta) != (len(sign.BlockMap) + 1) {
+	if len(delta) != (len(sign.BlockMap) + additionalblks) {
 		t.Fatalf("Error , wrong number of blocks in delta %v\n, signature %v\n", delta, *sign)
 
 	}
@@ -145,5 +150,5 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 			t.Fatalf("Failed, delta block doesn't match %v \n", blk)
 		}
 	}
-
+	glog.Flush()
 }

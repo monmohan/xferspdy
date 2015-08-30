@@ -29,7 +29,8 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]B
 	if (rptr + blksz) > filesz {
 		brem = filesz - rptr
 	}
-	glog.V(2).Infof("Process Block :rptr %d filesz %d blocksz %d brem %d delta %v\n", rptr, filesz, s.Blocksz, brem, *delta)
+	glog.V(2).Infof("Process Block :rptr %d filesz %d blocksz %d brem %d \n", rptr, filesz, s.Blocksz, brem)
+	glog.V(4).Infof("Delta %v \n", *delta)
 	if brem == 0 {
 		glog.V(2).Infof("All read\n ")
 		return
@@ -40,7 +41,7 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]B
 	if err != nil || int64(n) != brem {
 		glog.Fatalf("Error %v read %d bytes", err, n)
 	}
-	//fmt.Printf("Buffer read %v \n", buf)
+
 	checksum, state := Checksum(buf)
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(buf), s)
 	if matched {
@@ -60,9 +61,11 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 
 	diff := *delta
 	db := &diff[len(diff)-1]
-	glog.V(2).Infof("db.data %v \n", db)
+	glog.V(4).Infof("db.data %v \n", db)
 	brem := filesz - (rptr + int64(len(st.window)))
-	glog.V(2).Infof(" Rolling : st %v rptr %d filesz %d blocksz %d brem %d delta %v\n", *st, rptr, filesz, s.Blocksz, brem, *delta)
+	glog.V(4).Infof("Rolling State: State %v \n", *st)
+	glog.V(2).Infof("Rolling Info: rptr %d filesz %d blocksz %d brem %d \n", rptr, filesz, s.Blocksz, brem)
+	glog.V(4).Infof("Delta %v \n", *delta)
 
 	if brem == 0 {
 		db.data = append(db.data, st.window...)
@@ -92,7 +95,7 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Signature) (mblock Block, matched bool) {
 	glog.V(2).Infof("comparing input checksum %d ", checksum)
 	for _, block := range s.BlockMap {
-		//fmt.Printf("Comparing with block %v", block)
+
 		if reflect.DeepEqual(block.Checksum32, checksum) && reflect.DeepEqual(sha256, block.Sha256hash) {
 			glog.V(2).Infof("found match ")
 			return block, true

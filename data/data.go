@@ -6,7 +6,6 @@ import (
 	"github.com/golang/glog"
 	"hash/adler32"
 	"io"
-	"log"
 	"os"
 )
 
@@ -24,7 +23,7 @@ type Block struct {
 }
 
 func (b Block) String() string {
-	return fmt.Sprintf("Start %d End %d adler %d data %v isdatablock %v \n", b.Start, b.End, b.Checksum32, b.data, b.isdatablock)
+	return fmt.Sprintf("Start %d End %d adler %d isdatablock %v \n", b.Start, b.End, b.Checksum32, b.isdatablock)
 }
 
 func NewSignature(filename string, blocksize uint32) *Signature {
@@ -33,7 +32,7 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 	defer file.Close()
 
 	if e != nil {
-		log.Fatal(e)
+		glog.Fatal(e)
 	}
 
 	n, start := 0, int64(0)
