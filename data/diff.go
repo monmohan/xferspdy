@@ -2,9 +2,8 @@ package data
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"github.com/golang/glog"
 	"io"
-	"log"
 	"os"
 	"reflect"
 )
@@ -13,7 +12,7 @@ func NewDiff(filename string, sign Signature) []Block {
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
-		log.Fatal(err)
+		glog.Fatal(err)
 	}
 
 	finfo, _ := file.Stat()
@@ -30,27 +29,27 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]B
 	if (rptr + blksz) > filesz {
 		brem = filesz - rptr
 	}
-	fmt.Printf("Process Block :rptr %d filesz %d blocksz %d brem %d delta %v\n", rptr, filesz, s.Blocksz, brem, *delta)
+	glog.V(2).Infof("Process Block :rptr %d filesz %d blocksz %d brem %d delta %v\n", rptr, filesz, s.Blocksz, brem, *delta)
 	if brem == 0 {
-		fmt.Println("All read\n ")
+		glog.V(2).Infof("All read\n ")
 		return
 	}
 
 	buf := make([]byte, brem)
 	n, err := io.ReadFull(r, buf)
 	if err != nil || int64(n) != brem {
-		fmt.Printf("Error %v read %d bytes", err, n)
+		glog.Fatalf("Error %v read %d bytes", err, n)
 	}
 	//fmt.Printf("Buffer read %v \n", buf)
 	checksum, state := Checksum(buf)
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(buf), s)
 	if matched {
-		fmt.Printf("Matched block %v \n", matchblock)
+		glog.V(2).Infof("Matched block %v \n", matchblock)
 		*delta = append(*delta, matchblock)
 		rptr += int64(brem)
 		processBlock(r, rptr, filesz, s, delta)
 	} else {
-		fmt.Printf("Block not matched\n")
+		glog.V(2).Infof("Block not matched\n")
 		*delta = append(*delta, Block{isdatablock: true, Start: rptr})
 		processRolling(r, state, rptr, filesz, s, delta)
 	}
@@ -61,14 +60,14 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 
 	diff := *delta
 	db := &diff[len(diff)-1]
-	fmt.Printf("db.data %v \n", db)
+	glog.V(2).Infof("db.data %v \n", db)
 	brem := filesz - (rptr + int64(len(st.window)))
-	fmt.Printf(" Rolling : st %v rptr %d filesz %d blocksz %d brem %d delta %v\n", *st, rptr, filesz, s.Blocksz, brem, *delta)
+	glog.V(2).Infof(" Rolling : st %v rptr %d filesz %d blocksz %d brem %d delta %v\n", *st, rptr, filesz, s.Blocksz, brem, *delta)
 
 	if brem == 0 {
 		db.data = append(db.data, st.window...)
 		*delta = diff
-		fmt.Printf("db.data %v \n", db.data)
+		glog.V(4).Infof("db.data %v \n", db.data)
 		return
 	}
 	fb := st.window[0]
@@ -76,7 +75,7 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 	b := make([]byte, 1)
 	_, e := io.ReadFull(r, b)
 	if e != nil {
-		log.Fatal(e)
+		glog.Fatal(e)
 	}
 	rptr += 1
 	checksum := st.UpdateWindow(b[0])
@@ -91,11 +90,11 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 }
 
 func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Signature) (mblock Block, matched bool) {
-	fmt.Printf("comparing input checksum %d ", checksum)
+	glog.V(2).Infof("comparing input checksum %d ", checksum)
 	for _, block := range s.BlockMap {
 		//fmt.Printf("Comparing with block %v", block)
 		if reflect.DeepEqual(block.Checksum32, checksum) && reflect.DeepEqual(sha256, block.Sha256hash) {
-			fmt.Println("found match ")
+			glog.V(2).Infof("found match ")
 			return block, true
 		}
 	}

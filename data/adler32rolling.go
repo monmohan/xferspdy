@@ -6,7 +6,7 @@ in single byte increments by using the hash parts computed earlier
 package data
 
 import (
-	"fmt"
+	"github.com/golang/glog"
 )
 
 const (
@@ -26,9 +26,9 @@ type State struct {
 }
 
 func Checksum(p []byte) (uint32, *State) {
-	fmt.Printf("Length of buffer %d \n Calc checksum for \n %v \n", len(p), p)
+	glog.V(4).Infof("Length of buffer %d \n Calc checksum for \n %v \n", len(p), p)
 	s1, s2 := uint32(1&0xffff), uint32(1>>16)
-	fmt.Printf("Init: s1 %d s2 %d\n", s1, s2)
+	glog.V(4).Infof("Init: s1 %d s2 %d\n", s1, s2)
 	orig := p
 	for len(p) > 0 {
 		var q []byte
@@ -43,7 +43,7 @@ func Checksum(p []byte) (uint32, *State) {
 		s2 %= mod
 		p = q
 	}
-	fmt.Printf("s1 %d s2 %d\n", s1, s2)
+	glog.V(4).Infof("s1 %d s2 %d\n", s1, s2)
 	return uint32(s2<<16 | s1), &State{orig, s1, s2}
 }
 

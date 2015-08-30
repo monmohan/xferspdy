@@ -1,12 +1,16 @@
 package data
 
 import (
+	"flag"
 	"fmt"
+	"github.com/golang/glog"
 	"io"
 	"os"
 	"reflect"
 	"testing"
 )
+
+var logLevel = flag.Int("lv", 3, "log level")
 
 func TestDeltaSameFile(t *testing.T) {
 	fmt.Println("===TestDeltaSameFile===..")
@@ -80,9 +84,13 @@ func TestSameBlocks(t *testing.T) {
 }
 
 func TestFewBlocksWithMorebytes(t *testing.T) {
-	fmt.Println("==TestFewBlocksWithMorebytes1===")
-	blksz := 1024
-	basesz := 20000
+	fmt.Println("==TestFewBlocksWithMorebytes===")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+
+	fmt.Println("log v value ", flag.Lookup("v").Value)
+	blksz := 16 * 2048
+	basesz := 200000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
@@ -94,7 +102,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	ofile.Close()
 
 	sign := NewSignature(ofname, uint32(blksz))
-	fmt.Printf("Signature for file %v\n %v\n", ofname, *sign)
+	glog.V(2).Infof("Signature for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
@@ -123,7 +131,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	//check last block
 	blk = delta[len(delta)-1]
 	lblkSt := len(extraBytes) + basesz - (basesz % blksz)
-	fmt.Printf("expected last block start %v\n", lblkSt)
+	glog.V(0).Infof("expected last block start %v\n", lblkSt)
 	if !blk.isdatablock || blk.Start != int64(lblkSt) {
 		t.Fatalf("Last block is not a data block %v \n", blk)
 	}
@@ -131,7 +139,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	delta = delta[1 : len(delta)-1]
 
 	for i, blk := range delta {
-		fmt.Printf("Comparing Block number %d , blk %v \n", i, blk)
+		glog.V(0).Infof("Comparing Block number %d , blk %v \n", i, blk)
 		_, matched := matchBlock(blk.Checksum32, blk.Sha256hash, *sign)
 		if !matched {
 			t.Fatalf("Failed, delta block doesn't match %v \n", blk)

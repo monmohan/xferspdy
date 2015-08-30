@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"github.com/golang/glog"
 	"os"
-	//"github.com/monmohan/xferspdy/data"
 )
 
 func main() {
 	//testFlag()
 	//testBufIO()
-	testSlice()
+	flag.Parse()
+	testLog()
 }
 
 func testFlag() {
@@ -19,6 +20,12 @@ func testFlag() {
 	flag.StringVar(&name, "name", "unknown", "specify a name")
 	flag.Parse()
 	fmt.Printf("Hello %s\n", name)
+
+}
+
+func testLog() {
+	r := []byte("xxxx")
+	glog.V(2).Infof("Something logged %v", r)
 
 }
 
@@ -33,16 +40,4 @@ func testBufIO() {
 	n, _ := bufreader.Read(few)
 	fmt.Printf("number of bytes read %d ", n)
 	fmt.Println(string(few))
-}
-
-func testSlice() {
-	var d []int
-	updSlice(&d)
-	fmt.Printf("d %v\n", d)
-
-}
-
-func updSlice(s *[]int) {
-	*s = append(*s, 1)
-
 }

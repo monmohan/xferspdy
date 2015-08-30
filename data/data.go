@@ -3,6 +3,7 @@ package data
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/golang/glog"
 	"hash/adler32"
 	"io"
 	"log"
@@ -50,10 +51,9 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 			start = block.End
 		} else {
 			if err == io.EOF {
-				fmt.Println("File read complete")
+				glog.V(2).Infoln("File read complete")
 			} else {
-				log.Fatal(err)
-
+				glog.Fatal(err)
 			}
 
 		}
