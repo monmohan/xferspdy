@@ -152,3 +152,72 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	}
 	glog.Flush()
 }
+
+func TestFirstLastBlockDataDeleted(t *testing.T) {
+	fmt.Println("==TestFirstLastBlockDataDeleted===\n")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+
+	blksz := 1024
+	basesz := 200000
+	delBytes := make([]byte, 1000)
+
+	basefile := "../testdata/samplefile"
+	bfile, _ := os.Open(basefile)
+
+	defer bfile.Close()
+	ofname := "../testdata/TestFirstLastBlockDataDeleted_o"
+	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	io.CopyN(ofile, bfile, int64(basesz))
+	bfile.Seek(0, 0)
+	ofile.Close()
+
+	sign := NewSignature(ofname, uint32(blksz))
+	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+
+	nfname := "../testdata/TestFirstLastBlockDataDeleted_1"
+
+	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	//move read pointer
+	io.ReadFull(bfile, delBytes)
+	//read fewer bytes
+	io.CopyN(nfile, bfile, int64(basesz-(2*len(delBytes))))
+	nfile.Close()
+
+	delta := NewDiff(nfname, *sign)
+	glog.V(2).Infof("Resulting Delta %v\n", delta)
+	glog.Flush()
+	additionalblks := -1
+	if rem := basesz % blksz; rem > len(delBytes) {
+		additionalblks = 0
+	}
+
+	if len(delta) != (len(sign.BlockMap) + additionalblks) {
+		t.Fatalf("Error , wrong number of blocks in delta %v\n, signature %v\n", delta, *sign)
+
+	}
+
+	//check first block
+	blk := delta[0]
+	if !blk.isdatablock || blk.Start != 0 {
+		t.Fatalf("First block is not a data block %v \n", blk)
+	}
+
+	//check last block
+	blk = delta[len(delta)-1]
+	lastBlockIsDatablk := ((basesz - len(delBytes)) % blksz) != 0
+	if lastBlockIsDatablk != blk.isdatablock {
+		t.Fatalf("Last block is has a wrong block type , expected data block %v\n, Block %v \n", lastBlockIsDatablk, blk)
+	}
+
+	delta = delta[1 : len(delta)-1]
+
+	for i, blk := range delta {
+		glog.V(0).Infof("Comparing Block number %d , blk %v \n", i, blk)
+		_, matched := matchBlock(blk.Checksum32, blk.Sha256hash, *sign)
+		if !matched {
+			t.Fatalf("Failed, delta block doesn't match %v \n", blk)
+		}
+	}
+
+}
