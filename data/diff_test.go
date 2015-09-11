@@ -221,3 +221,61 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	}
 
 }
+func TestRandomChanges(t *testing.T) {
+	fmt.Println("==TestRandomChanges===\n")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+
+	blksz := 32
+	basesz := 200
+
+	basefile := "../testdata/samplefile"
+	bfile, _ := os.Open(basefile)
+
+	defer bfile.Close()
+	ofname := "../testdata/TestRandomChanges_o"
+	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	io.CopyN(ofile, bfile, int64(basesz))
+	bfile.Seek(0, 0)
+	ofile.Close()
+
+	sign := NewSignature(ofname, uint32(blksz))
+	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+
+	nfname := "../testdata/TestRandomChanges_1"
+	totalBlks := len(sign.BlockMap)
+	if totalBlks < 4 {
+		t.Fatal("number of blocks should be atleast 4")
+	}
+	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	buf := make([]byte, blksz)
+	io.ReadFull(bfile, buf)
+	//drop first few bytes
+	_, err := nfile.Write(buf[4:])
+	if err != nil {
+		t.Fatalf("write failed %v", err)
+	}
+	//copy couple of blocks
+	io.CopyN(nfile, bfile, int64(2*blksz))
+	//read a block in mem and change last couple of bytes
+	io.ReadFull(bfile, buf)
+	buf[len(buf)-1] = buf[len(buf)-1] + 1
+	buf[len(buf)-2] = buf[len(buf)-2] + 1
+	buf = append(buf, 0) //append random byte
+	_, err = nfile.Write(buf)
+	if err != nil {
+		t.Fatalf("write failed %v", err)
+	}
+	//copy some more
+	//copy couple of blocks
+	io.CopyN(nfile, bfile, int64(blksz*(totalBlks-4)))
+
+	//add one more block
+	io.CopyN(nfile, bfile, int64(blksz))
+	nfile.Close()
+
+	delta := NewDiff(nfname, *sign)
+	glog.V(2).Infof("Resulting Delta %v\n", delta)
+	glog.Flush()
+
+}
