@@ -12,6 +12,7 @@ import (
 type Signature struct {
 	Blocksz  uint32
 	BlockMap []Block
+	Source   string
 }
 
 type Block struct {
@@ -38,7 +39,7 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 	n, start := 0, int64(0)
 	var err error = nil
 	var block Block
-	signature := Signature{Blocksz: blocksize}
+	signature := Signature{Blocksz: blocksize, Source: filename}
 
 	for err == nil {
 		n, err = file.Read(bufz)

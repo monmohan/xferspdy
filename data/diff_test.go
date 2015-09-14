@@ -226,8 +226,8 @@ func TestRandomChanges(t *testing.T) {
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 
-	blksz := 32
-	basesz := 200
+	blksz := 1024
+	basesz := 200000
 
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
@@ -251,7 +251,8 @@ func TestRandomChanges(t *testing.T) {
 	buf := make([]byte, blksz)
 	io.ReadFull(bfile, buf)
 	//drop first few bytes
-	_, err := nfile.Write(buf[4:])
+	dropBytes := 4
+	_, err := nfile.Write(buf[dropBytes:])
 	if err != nil {
 		t.Fatalf("write failed %v", err)
 	}
@@ -277,5 +278,13 @@ func TestRandomChanges(t *testing.T) {
 	delta := NewDiff(nfname, *sign)
 	glog.V(2).Infof("Resulting Delta %v\n", delta)
 	glog.Flush()
+
+	if !delta[0].isdatablock || !delta[len(delta)-1].isdatablock || !delta[3].isdatablock {
+		t.Fatalf(" First/last/3rd block is not a data block %v \n", delta)
+	}
+
+	/*if len(delta) != (len(sign.BlockMap) + 1) {
+		t.Fatalf("wrong delta size , delta=%v\n, signature=%v\n", delta, sign)
+	}*/
 
 }
