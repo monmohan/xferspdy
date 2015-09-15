@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
+	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -32,12 +34,23 @@ func TestFilePatchSimpleText(t *testing.T) {
 	nfname := "../testdata/TextFilePatchSimple_1"
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	nfile.Write(mtext)
-	nfile.Close()
+	defer nfile.Close()
 	delta := NewDiff(nfname, *sign)
+	glog.V(4).Infof("Delta = %v ", delta)
 
 	expfname := "../testdata/TextFilePatchSimple_2"
 	expfile, _ := os.OpenFile(expfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer expfile.Close()
 	Patch(delta, *sign, expfile)
-
+	//read from new file and delta and compare file bytes
+	nr, _ := os.Open(nfname)
+	er, _ := os.Open(expfname)
+	nbytes, _ := ioutil.ReadAll(nr)
+	expbytes, _ := ioutil.ReadAll(er)
+	if !reflect.DeepEqual(expbytes, nbytes) {
+		t.Fatalf("bytes don't match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
+	} else {
+		glog.V(4).Infof("bytes match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
+	}
+	glog.Flush()
 }

@@ -10,9 +10,11 @@ import (
 
 func main() {
 	//testFlag()
+	var cline = flag.NewFlagSet(os.Args, flag.ExitOnError)
+	fmt.Printf("command line value %v\n", cline)
 	//testBufIO()
-	flag.Parse()
-	testLog()
+	//flag.Parse()
+	//testLog()
 }
 
 func testFlag() {
