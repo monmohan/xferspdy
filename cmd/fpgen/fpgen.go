@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/gob"
 	"flag"
-	"fmt"
 	"github.com/golang/glog"
 	"github.com/monmohan/xferspdy/data"
 	"log"
@@ -12,22 +11,19 @@ import (
 )
 
 var (
-	logLevel = flag.Int("loglevel", 3, "log level")
-	fPath    = flag.String("file", "", "File path to create the fingerprint, mandatory")
-	blockSz  = flag.Uint64("blocksz", 2*1024, "Block Size, default block size is 2KB")
+	fPath   = flag.String("file", "", "File path to create the fingerprint, mandatory")
+	blockSz = flag.Uint64("blocksz", 2*1024, "Block Size, default block size is 2KB")
 )
 
 func main() {
-	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 	flag.Parse()
 	if *fPath == "" {
 		glog.Fatal("File path is required")
 	}
-	glog.Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
+	glog.V(2).Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
 
 	fgprt := data.NewSignature(*fPath, uint32(*blockSz))
 	glog.V(4).Infof("Signature  %v \n", *fgprt)
-	glog.Flush()
 
 	dir, fname := filepath.Split(*fPath)
 
@@ -40,6 +36,7 @@ func main() {
 
 	enc := gob.NewEncoder(fpfile)
 	enc.Encode(*fgprt)
-	glog.Info("Signature created %v \n ", fpfile)
+	glog.V(2).Infof("Signature created %v \n ", fpfile.Name())
+	glog.Flush()
 
 }
