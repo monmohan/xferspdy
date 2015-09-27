@@ -29,8 +29,8 @@ func TestFilePatchSimpleText(t *testing.T) {
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	ofile.Write(otext)
 	ofile.Close()
-	sign := NewSignature(ofname, uint32(blksz))
-	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+	sign := NewFingerprint(ofname, uint32(blksz))
+	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 	nfname := "../testdata/TextFilePatchSimple_1"
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	nfile.Write(mtext)

@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Patch(delta []Block, sign Signature, t io.Writer) {
+func Patch(delta []Block, sign Fingerprint, t io.Writer) {
 	s, e := os.Open(sign.Source)
 	defer s.Close()
 	wptr := int64(0)

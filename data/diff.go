@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-func NewDiff(filename string, sign Signature) []Block {
+func NewDiff(filename string, sign Fingerprint) []Block {
 	file, err := os.Open(filename)
 	defer file.Close()
 	if err != nil {
@@ -22,7 +22,7 @@ func NewDiff(filename string, sign Signature) []Block {
 	return delta
 }
 
-func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]Block) {
+func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[]Block) {
 
 	blksz := int64(s.Blocksz)
 	brem := int64(blksz)
@@ -57,7 +57,7 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Signature, delta *[]B
 
 }
 
-func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signature, delta *[]Block) {
+func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerprint, delta *[]Block) {
 
 	diff := *delta
 	db := &diff[len(diff)-1]
@@ -92,7 +92,7 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Signatur
 	}
 }
 
-func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Signature) (mblock Block, matched bool) {
+func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Fingerprint) (mblock Block, matched bool) {
 	glog.V(3).Infof("comparing input checksum %d ", checksum)
 	for _, block := range s.BlockMap {
 

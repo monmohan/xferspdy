@@ -15,7 +15,7 @@ var logLevel = flag.Int("lv", 3, "log level")
 func TestDeltaSameFile(t *testing.T) {
 	fmt.Println("===TestDeltaSameFile===..")
 	fname := "../testdata/26bytefile"
-	sign := NewSignature(fname, 16)
+	sign := NewFingerprint(fname, 16)
 	fmt.Printf(" %v\n", *sign)
 	delta := NewDiff(fname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
@@ -26,7 +26,7 @@ func TestDeltaSameFile(t *testing.T) {
 func TestDelta2ByteExtraInEnd(t *testing.T) {
 	fmt.Println("==TestDelta2ByteExtraInEnd==")
 	fname := "../testdata/26bytefile"
-	sign := NewSignature(fname, 24)
+	sign := NewFingerprint(fname, 24)
 	fmt.Printf(" %v\n", *sign)
 	fname = "../testdata/28bytefile"
 	delta := NewDiff(fname, *sign)
@@ -37,13 +37,13 @@ func TestDelta2ByteExtraInEnd(t *testing.T) {
 func TestDelta2ByteExtraInMid(t *testing.T) {
 	fmt.Println("==TestDelta2ByteExtraInMid, block size 5 ==")
 	ofname := "../testdata/10bytefile"
-	sign := NewSignature(ofname, 5)
+	sign := NewFingerprint(ofname, 5)
 	fmt.Printf(" %v\n", *sign)
 	nfname := "../testdata/12bytemidchgfile"
 	delta := NewDiff(nfname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
 	fmt.Println("==TestDelta2ByteExtraInMid block size 8 ==\n")
-	sign = NewSignature(ofname, 8)
+	sign = NewFingerprint(ofname, 8)
 
 	delta = NewDiff(nfname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
@@ -64,7 +64,7 @@ func TestSameBlocks(t *testing.T) {
 	io.CopyN(ofile, bfile, int64(basesz))
 	ofile.Close()
 
-	sign := NewSignature(ofname, uint32(blksz))
+	sign := NewFingerprint(ofname, uint32(blksz))
 
 	delta := NewDiff(ofname, *sign)
 
@@ -74,10 +74,10 @@ func TestSameBlocks(t *testing.T) {
 			t.Error("failed diff %v \n at blk %v ", delta, blk)
 			t.FailNow()
 		} else {
-			t.Log("Diff and signature block match,\n", blk)
+			t.Log("Diff and Fingerprint block match,\n", blk)
 		}
 	}
-	fmt.Printf("Signature : %v\n", sign)
+	fmt.Printf("Fingerprint : %v\n", sign)
 
 	fmt.Printf("Delta: %v\n", delta)
 
@@ -101,8 +101,8 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	bfile.Seek(0, 0)
 	ofile.Close()
 
-	sign := NewSignature(ofname, uint32(blksz))
-	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+	sign := NewFingerprint(ofname, uint32(blksz))
+	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
@@ -120,7 +120,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	}
 
 	if len(delta) != (len(sign.BlockMap) + additionalblks) {
-		t.Fatalf("Error , wrong number of blocks in delta %v\n, signature %v\n", delta, *sign)
+		t.Fatalf("Error , wrong number of blocks in delta %v\n, Fingerprint %v\n", delta, *sign)
 
 	}
 
@@ -172,8 +172,8 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	bfile.Seek(0, 0)
 	ofile.Close()
 
-	sign := NewSignature(ofname, uint32(blksz))
-	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+	sign := NewFingerprint(ofname, uint32(blksz))
+	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestFirstLastBlockDataDeleted_1"
 
@@ -193,7 +193,7 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	}
 
 	if len(delta) != (len(sign.BlockMap) + additionalblks) {
-		t.Fatalf("Error , wrong number of blocks in delta %v\n, signature %v\n", delta, *sign)
+		t.Fatalf("Error , wrong number of blocks in delta %v\n, Fingerprint %v\n", delta, *sign)
 
 	}
 
@@ -239,8 +239,8 @@ func TestRandomChanges(t *testing.T) {
 	bfile.Seek(0, 0)
 	ofile.Close()
 
-	sign := NewSignature(ofname, uint32(blksz))
-	glog.V(4).Infof("Signature for file %v\n %v\n", ofname, *sign)
+	sign := NewFingerprint(ofname, uint32(blksz))
+	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
 	nfname := "../testdata/TestRandomChanges_1"
 	totalBlks := len(sign.BlockMap)
@@ -284,7 +284,7 @@ func TestRandomChanges(t *testing.T) {
 	}
 
 	/*if len(delta) != (len(sign.BlockMap) + 1) {
-		t.Fatalf("wrong delta size , delta=%v\n, signature=%v\n", delta, sign)
+		t.Fatalf("wrong delta size , delta=%v\n, Fingerprint=%v\n", delta, sign)
 	}*/
 
 }

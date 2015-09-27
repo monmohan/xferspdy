@@ -10,9 +10,9 @@ import (
 	"testing"
 )
 
-func TestSignatureCreate(t *testing.T) {
+func TestFingerprintCreate(t *testing.T) {
 	//t.Skip("not now..")
-	sign := NewSignature("../testdata/Adler32testresource", 2048)
+	sign := NewFingerprint("../testdata/Adler32testresource", 2048)
 	fmt.Printf(" %v\n", sign.Blocksz)
 
 }

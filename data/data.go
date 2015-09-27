@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-type Signature struct {
+type Fingerprint struct {
 	Blocksz  uint32
 	BlockMap []Block
 	Source   string
@@ -27,7 +27,7 @@ func (b Block) String() string {
 	return fmt.Sprintf("Start %d End %d adler %d isdatablock %v \n", b.Start, b.End, b.Checksum32, b.isdatablock)
 }
 
-func NewSignature(filename string, blocksize uint32) *Signature {
+func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 	bufz := make([]byte, blocksize)
 	file, e := os.Open(filename)
 	defer file.Close()
@@ -39,7 +39,7 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 	n, start := 0, int64(0)
 	var err error = nil
 	var block Block
-	signature := Signature{Blocksz: blocksize, Source: filename}
+	fngprt := Fingerprint{Blocksz: blocksize, Source: filename}
 
 	for err == nil {
 		n, err = file.Read(bufz)
@@ -47,7 +47,7 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
 				Sha256hash: sha256.Sum256(bufz[0:n])}
-			signature.BlockMap = append(signature.BlockMap, block)
+			fngprt.BlockMap = append(fngprt.BlockMap, block)
 			start = block.End
 		} else {
 			if err == io.EOF {
@@ -59,6 +59,6 @@ func NewSignature(filename string, blocksize uint32) *Signature {
 		}
 
 	}
-	return &signature
+	return &fngprt
 
 }
