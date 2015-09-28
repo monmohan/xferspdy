@@ -59,7 +59,7 @@ func TestSameBlocks(t *testing.T) {
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
-	ofname := "../testdata/TestSameBlocks"
+	ofname := "/tmp/TestSameBlocks"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	ofile.Close()
@@ -95,7 +95,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
-	ofname := "../testdata/TestFewBlocksWithMorebytes_o"
+	ofname := "/tmp/TestFewBlocksWithMorebytes_o"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	bfile.Seek(0, 0)
@@ -104,7 +104,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	sign := NewFingerprint(ofname, uint32(blksz))
 	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
-	nfname := "../testdata/TestFewBlocksWithMorebytes_1"
+	nfname := "/tmp/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	nfile.Write(extraBytes) //append in the begining
@@ -166,7 +166,7 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
-	ofname := "../testdata/TestFirstLastBlockDataDeleted_o"
+	ofname := "/tmp/TestFirstLastBlockDataDeleted_o"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	bfile.Seek(0, 0)
@@ -175,7 +175,7 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	sign := NewFingerprint(ofname, uint32(blksz))
 	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
-	nfname := "../testdata/TestFirstLastBlockDataDeleted_1"
+	nfname := "/tmp/TestFirstLastBlockDataDeleted_1"
 
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	//move read pointer
@@ -233,7 +233,7 @@ func TestRandomChanges(t *testing.T) {
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
-	ofname := "../testdata/TestRandomChanges_o"
+	ofname := "/tmp/TestRandomChanges_o"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	bfile.Seek(0, 0)
@@ -242,7 +242,7 @@ func TestRandomChanges(t *testing.T) {
 	sign := NewFingerprint(ofname, uint32(blksz))
 	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
-	nfname := "../testdata/TestRandomChanges_1"
+	nfname := "/tmp/TestRandomChanges_1"
 	totalBlks := len(sign.BlockMap)
 	if totalBlks < 4 {
 		t.Fatal("number of blocks should be atleast 4")

@@ -19,7 +19,7 @@ func TestFingerprintCreate(t *testing.T) {
 
 func TestRollingChecksum(t *testing.T) {
 	fmt.Println("testing checksum")
-	file, e := os.Open("../testdata/TestFewBlocksWithMorebytes_1")
+	file, e := os.Open("../testdata/samplefile")
 	defer file.Close()
 
 	if e != nil {
@@ -34,7 +34,7 @@ func TestRollingChecksum(t *testing.T) {
 	mid := 5000
 	//mid = 1100
 
-	num_iter := 1
+	num_iter := 100
 	st := 3076
 	for num_iter > 0 {
 		x := data[st:mid]

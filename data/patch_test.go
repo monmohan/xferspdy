@@ -25,20 +25,20 @@ func TestFilePatchSimpleText(t *testing.T) {
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 	blksz := 32
-	ofname := "../testdata/TextFilePatchSimple_o"
+	ofname := "/tmp/TextFilePatchSimple_o"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	ofile.Write(otext)
 	ofile.Close()
 	sign := NewFingerprint(ofname, uint32(blksz))
 	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
-	nfname := "../testdata/TextFilePatchSimple_1"
+	nfname := "/tmp/TextFilePatchSimple_1"
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	nfile.Write(mtext)
 	defer nfile.Close()
 	delta := NewDiff(nfname, *sign)
 	glog.V(4).Infof("Delta = %v ", delta)
 
-	expfname := "../testdata/TextFilePatchSimple_2"
+	expfname := "/tmp/TextFilePatchSimple_2"
 	expfile, _ := os.OpenFile(expfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer expfile.Close()
 	Patch(delta, *sign, expfile)
