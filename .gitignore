@@ -1,3 +1,4 @@
 data.test.*
 ./xferspdy
 cmd/fpgen/fpgen
+cmd/diff/diff

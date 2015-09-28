@@ -5,7 +5,6 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/monmohan/xferspdy/data"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +21,7 @@ func main() {
 	}
 	glog.V(2).Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
 
-	fgprt := data.NewSignature(*fPath, uint32(*blockSz))
+	fgprt := data.NewFingerprint(*fPath, uint32(*blockSz))
 	glog.V(4).Infof("Signature  %v \n", *fgprt)
 
 	dir, fname := filepath.Split(*fPath)
@@ -31,7 +30,7 @@ func main() {
 	defer fpfile.Close()
 
 	if err != nil {
-		log.Fatalf("Error in creating finger print file %v \n, Error :", filepath.Join(dir, fname+".fingerprint"), err)
+		glog.Fatalf("Error in creating finger print file %v \n, Error :", filepath.Join(dir, fname+".fingerprint"), err)
 	}
 
 	enc := gob.NewEncoder(fpfile)
