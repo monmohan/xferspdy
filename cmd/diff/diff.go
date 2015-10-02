@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"flag"
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/monmohan/xferspdy/data"
 	"os"
@@ -55,7 +56,7 @@ func main() {
 	if err != nil {
 		glog.Fatalf("Error in encoding Patch file %v \n, Error :", filepath.Join(dir, fname+".patch"), err)
 	}
-	glog.V(2).Infof("Patch created %v \n ", nfile.Name())
+	fmt.Printf("Patch file created - %v \n ", nfile.Name())
 
 	glog.Flush()
 

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"flag"
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/monmohan/xferspdy/data"
 	"os"
@@ -26,7 +27,9 @@ func main() {
 
 	dir, fname := filepath.Split(*fPath)
 
-	fpfile, err := os.OpenFile(filepath.Join(dir, fname+".fingerprint"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	fname = filepath.Join(dir, fname+".fingerprint")
+
+	fpfile, err := os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 
 	if err != nil {
 		glog.Fatalf("Error in creating finger print file %v \n, Error :", filepath.Join(dir, fname+".fingerprint"), err)
@@ -34,16 +37,18 @@ func main() {
 
 	enc := gob.NewEncoder(fpfile)
 	enc.Encode(*fgprt)
-	glog.V(2).Infof("Signature created %v \n ", fpfile.Name())
+	fmt.Printf("Fingerprint for file: %v \nGenerated:  %v \n ", *fPath, fpfile.Name())
 	fpfile.Close()
 
-	fpfile, err = os.Open(filepath.Join(dir, fname+".fingerprint"))
+	fpfile, err = os.Open(fname)
 	defer fpfile.Close()
 
 	var fp data.Fingerprint
 	dec := gob.NewDecoder(fpfile)
 	err = dec.Decode(&fp)
+
 	glog.V(4).Infof("Verifying signature , created %v\n decoded from file %v\n", *fgprt, fp)
+
 	if err != nil || (len(fgprt.BlockMap) != len(fp.BlockMap)) {
 		glog.Fatalf("Failed to decode finger print during verification %v\n", err)
 	}

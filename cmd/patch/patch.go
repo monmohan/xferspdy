@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"flag"
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/monmohan/xferspdy/data"
 	"os"
@@ -41,7 +42,7 @@ func main() {
 
 	dir, fname := filepath.Split(*fPath)
 
-	target, err := os.OpenFile(filepath.Join(dir, fname+".patched"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	target, err := os.OpenFile(filepath.Join(dir, "Patched_"+fname), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 
 	defer target.Close()
 
@@ -51,7 +52,7 @@ func main() {
 
 	data.PatchFile(pd, *fPath, target)
 
-	glog.V(2).Infof("Patch complete %v \n ", target.Name())
+	fmt.Printf("Patch applied, Target file generated - %v \n ", target.Name())
 
 	glog.Flush()
 
