@@ -54,3 +54,34 @@ func TestFilePatchSimpleText(t *testing.T) {
 	}
 	glog.Flush()
 }
+
+func TestFilePatchWordDocument(t *testing.T) {
+	fmt.Println("Test to patch a word document")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+	blksz := 2048
+
+	ofname := "../testdata/doc_v1.docx"
+	sign := NewFingerprint(ofname, uint32(blksz))
+	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
+
+	nfname := "../testdata/doc_v2.docx"
+	delta := NewDiff(nfname, *sign)
+	glog.V(4).Infof("Delta = %v ", delta)
+
+	expfname := "/tmp/doc_patched.docx"
+	expfile, _ := os.OpenFile(expfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+	defer expfile.Close()
+	Patch(delta, *sign, expfile)
+	//read from new file and delta and compare file bytes
+	nr, _ := os.Open(nfname)
+	er, _ := os.Open(expfname)
+	nbytes, _ := ioutil.ReadAll(nr)
+	expbytes, _ := ioutil.ReadAll(er)
+	if !reflect.DeepEqual(expbytes, nbytes) {
+		t.Fatalf("bytes don't match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
+	} else {
+		glog.V(4).Infof("bytes match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
+	}
+	glog.Flush()
+}

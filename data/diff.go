@@ -19,6 +19,7 @@ func NewDiff(filename string, sign Fingerprint) []Block {
 
 	var delta []Block
 	processBlock(file, 0, finfo.Size(), sign, &delta)
+	glog.V(3).Infof("Delta created %v\n", delta)
 	return delta
 }
 
@@ -51,7 +52,7 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[
 		processBlock(r, rptr, filesz, s, delta)
 	} else {
 		glog.V(2).Infof("Block not matched\n")
-		*delta = append(*delta, Block{isdatablock: true, Start: rptr})
+		*delta = append(*delta, Block{HasData: true, Start: rptr})
 		processRolling(r, state, rptr, filesz, s, delta)
 	}
 
@@ -61,20 +62,20 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerpr
 
 	diff := *delta
 	db := &diff[len(diff)-1]
-	glog.V(4).Infof("db.data %v \n", db)
+	glog.V(4).Infof("db.RawBytes %v \n", db)
 	brem := filesz - (rptr + int64(len(st.window)))
 	glog.V(4).Infof("Rolling State: State %v \n", *st)
 	glog.V(3).Infof("Rolling Info: rptr %d filesz %d blocksz %d brem %d \n", rptr, filesz, s.Blocksz, brem)
 	glog.V(4).Infof("Delta %v \n", *delta)
 
 	if brem == 0 {
-		db.data = append(db.data, st.window...)
+		db.RawBytes = append(db.RawBytes, st.window...)
 		*delta = diff
-		glog.V(4).Infof("db.data %v \n", db.data)
+		glog.V(4).Infof("db.RawBytes %v \n", db.RawBytes)
 		return
 	}
 	fb := st.window[0]
-	db.data = append(db.data, fb)
+	db.RawBytes = append(db.RawBytes, fb)
 	b := make([]byte, 1)
 	_, e := io.ReadFull(r, b)
 	if e != nil {

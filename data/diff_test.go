@@ -126,19 +126,19 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 
 	//check first block
 	blk := delta[0]
-	if !blk.isdatablock || blk.Start != 0 {
-		t.Fatalf("First block is not a data block %v \n", blk)
+	if !blk.HasData || blk.Start != 0 {
+		t.Fatalf("First block is not a RawBytes block %v \n", blk)
 	}
-	if !reflect.DeepEqual(extraBytes, blk.data) {
-		t.Fatalf("First block extra data mismatch %v \n", blk)
+	if !reflect.DeepEqual(extraBytes, blk.RawBytes) {
+		t.Fatalf("First block extra RawBytes mismatch %v \n", blk)
 	}
 
 	//check last block
 	blk = delta[len(delta)-1]
 	lblkSt := len(extraBytes) + basesz - (basesz % blksz)
 	glog.V(0).Infof("expected last block start %v\n", lblkSt)
-	if !blk.isdatablock || blk.Start != int64(lblkSt) {
-		t.Fatalf("Last block is not a data block %v \n", blk)
+	if !blk.HasData || blk.Start != int64(lblkSt) {
+		t.Fatalf("Last block is not a RawBytes block %v \n", blk)
 	}
 
 	delta = delta[1 : len(delta)-1]
@@ -199,15 +199,15 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 
 	//check first block
 	blk := delta[0]
-	if !blk.isdatablock || blk.Start != 0 {
-		t.Fatalf("First block is not a data block %v \n", blk)
+	if !blk.HasData || blk.Start != 0 {
+		t.Fatalf("First block is not a RawBytes block %v \n", blk)
 	}
 
 	//check last block
 	blk = delta[len(delta)-1]
 	lastBlockIsDatablk := ((basesz - len(delBytes)) % blksz) != 0
-	if lastBlockIsDatablk != blk.isdatablock {
-		t.Fatalf("Last block is has a wrong block type , expected data block %v\n, Block %v \n", lastBlockIsDatablk, blk)
+	if lastBlockIsDatablk != blk.HasData {
+		t.Fatalf("Last block is has a wrong block type , expected RawBytes block %v\n, Block %v \n", lastBlockIsDatablk, blk)
 	}
 
 	delta = delta[1 : len(delta)-1]
@@ -279,8 +279,8 @@ func TestRandomChanges(t *testing.T) {
 	glog.V(2).Infof("Resulting Delta %v\n", delta)
 	glog.Flush()
 
-	if !delta[0].isdatablock || !delta[len(delta)-1].isdatablock || !delta[3].isdatablock {
-		t.Fatalf(" First/last/3rd block is not a data block %v \n", delta)
+	if !delta[0].HasData || !delta[len(delta)-1].HasData || !delta[3].HasData {
+		t.Fatalf(" First/last/3rd block is not a RawBytes block %v \n", delta)
 	}
 
 	/*if len(delta) != (len(sign.BlockMap) + 1) {

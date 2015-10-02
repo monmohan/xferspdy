@@ -16,15 +16,15 @@ type Fingerprint struct {
 }
 
 type Block struct {
-	Start, End  int64
-	Checksum32  uint32
-	Sha256hash  [sha256.Size]byte
-	isdatablock bool
-	data        []byte
+	Start, End int64
+	Checksum32 uint32
+	Sha256hash [sha256.Size]byte
+	HasData    bool
+	RawBytes   []byte
 }
 
 func (b Block) String() string {
-	return fmt.Sprintf("Start %d End %d adler %d isdatablock %v \n", b.Start, b.End, b.Checksum32, b.isdatablock)
+	return fmt.Sprintf("Start %d End %d adler %d HasData %v \n", b.Start, b.End, b.Checksum32, b.HasData)
 }
 
 func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
