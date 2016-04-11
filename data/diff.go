@@ -5,7 +5,6 @@ import (
 	"github.com/golang/glog"
 	"io"
 	"os"
-	"reflect"
 )
 
 func NewDiff(filename string, sign Fingerprint) []Block {
@@ -95,13 +94,13 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerpr
 
 func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Fingerprint) (mblock Block, matched bool) {
 	glog.V(3).Infof("comparing input checksum %d ", checksum)
-	for _, block := range s.BlockMap {
-
-		if reflect.DeepEqual(block.Checksum32, checksum) && reflect.DeepEqual(sha256, block.Sha256hash) {
+	if sha2blk, ok := s.BlockMap[checksum]; ok {
+		if block, m := sha2blk[sha256]; m {
 			glog.V(2).Infof("found match ")
 			return block, true
 		}
 	}
+
 	return Block{}, false
 
 }

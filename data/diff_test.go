@@ -68,14 +68,15 @@ func TestSameBlocks(t *testing.T) {
 
 	delta := NewDiff(ofname, *sign)
 
-	for i, blk := range delta {
+	for _, blk := range delta {
 
-		if blk.Start != sign.BlockMap[i].Start && blk.End != sign.BlockMap[i].End {
+		if b, ok := matchBlock(blk.Checksum32, blk.Sha256hash, *sign); ok &&
+			(b.Start == blk.Start && b.End == blk.End) {
 			t.Error("failed diff %v \n at blk %v ", delta, blk)
 			t.FailNow()
-		} else {
-			t.Log("Diff and Fingerprint block match,\n", blk)
 		}
+		t.Log("Diff and Fingerprint block match,\n", blk)
+
 	}
 	fmt.Printf("Fingerprint : %v\n", sign)
 
