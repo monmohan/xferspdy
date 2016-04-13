@@ -57,29 +57,30 @@ func TestSameBlocks(t *testing.T) {
 	basesz := 10000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
+    defer bfile.Close()
 
-	defer bfile.Close()
 	ofname := "/tmp/TestSameBlocks"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	ofile.Close()
-
+	
+	
 	sign := NewFingerprint(ofname, uint32(blksz))
-
+	
 	delta := NewDiff(ofname, *sign)
 
 	for _, blk := range delta {
 
-		if b, ok := matchBlock(blk.Checksum32, blk.Sha256hash, *sign); ok &&
-			(b.Start == blk.Start && b.End == blk.End) {
-			t.Error("failed diff %v \n at blk %v ", delta, blk)
+		if b, ok := matchBlock(blk.Checksum32, blk.Sha256hash, *sign); !(ok && (b.Start == blk.Start && b.End == blk.End)) {
+			t.Errorf("failed diff %v \n at blk %v ", delta, blk)
 			t.FailNow()
 		}
 		t.Log("Diff and Fingerprint block match,\n", blk)
 
 	}
-	fmt.Printf("Fingerprint : %v\n", sign)
-
+	
+	fmt.Printf("Sign:=>	 %v\n",sign)
+	
 	fmt.Printf("Delta: %v\n", delta)
 
 }
