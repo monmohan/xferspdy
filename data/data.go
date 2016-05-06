@@ -28,11 +28,11 @@ func (b Block) String() string {
 }
 
 func (f Fingerprint) String() string {
-	buf:=fmt.Sprint("Block size=%d, Source=%s\n",f.Blocksz,f.Source)
-	for k,v:= range f.BlockMap{
-		buf+=fmt.Sprintf("Checksum32=%d\n",k)
-		for sha,blk :=range v{
-			buf+=fmt.Sprintf("\tSHA Hash=%d,Block=%v\n",sha,blk)
+	buf := fmt.Sprintf("Block size=%d, Source=%s\n", f.Blocksz, f.Source)
+	for k, v := range f.BlockMap {
+		buf += fmt.Sprintf("Checksum32=%d\n", k)
+		for sha, blk := range v {
+			buf += fmt.Sprintf("\tSHA Hash=%d,Block=%v\n", sha, blk)
 		}
 	}
 	return buf
@@ -76,7 +76,7 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 }
 
 func addBlock(f *Fingerprint, b Block) {
-	glog.V(2).Infof("Adding Block %v ",b)
+	glog.V(2).Infof("Adding Block %v ", b)
 	if sha2blk := f.BlockMap[b.Checksum32]; sha2blk == nil {
 		f.BlockMap[b.Checksum32] = make(map[[sha256.Size]byte]Block)
 	}

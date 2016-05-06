@@ -11,19 +11,22 @@ import (
 )
 
 var (
-	fPath   = flag.String("file", "", "File path to create the fingerprint, mandatory")
+	fPath   = flag.String("file", "", "File path to create the fingerprint, REQUIRED ")
 	blockSz = flag.Uint64("blocksz", 2*1024, "Block Size, default block size is 2KB")
+	verify  = flag.Bool("verify", false, "Verify fingerprint on creation")
 )
 
 func main() {
 	flag.Parse()
 	if *fPath == "" {
-		glog.Exitf("File path is required\n")
+		fmt.Println("Missing File parameter")
+		flag.Usage()
+		return
 	}
 	glog.V(2).Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
 
 	fgprt := data.NewFingerprint(*fPath, uint32(*blockSz))
-	glog.V(4).Infof("Signature  %v \n", *fgprt)
+	glog.V(4).Infof("Signature  %s \n", *fgprt)
 
 	dir, fname := filepath.Split(*fPath)
 
@@ -46,13 +49,13 @@ func main() {
 	var fp data.Fingerprint
 	dec := gob.NewDecoder(fpfile)
 	err = dec.Decode(&fp)
+	if *verify {
+		glog.V(4).Infof("Verifying signature , created %v\n decoded from file %v\n", *fgprt, fp)
 
-	glog.V(4).Infof("Verifying signature , created %v\n decoded from file %v\n", *fgprt, fp)
-
-	if err != nil || (len(fgprt.BlockMap) != len(fp.BlockMap)) {
-		glog.Fatalf("Failed to decode finger print during verification %v\n", err)
+		if err != nil || (len(fgprt.BlockMap) != len(fp.BlockMap)) {
+			glog.Fatalf("Failed to decode finger print during verification %v\n", err)
+		}
 	}
-
 	glog.Flush()
 
 }
