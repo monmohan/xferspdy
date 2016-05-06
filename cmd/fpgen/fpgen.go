@@ -18,7 +18,7 @@ var (
 func main() {
 	flag.Parse()
 	if *fPath == "" {
-		glog.Fatal("File path is required")
+		glog.Exitf("File path is required\n")
 	}
 	glog.V(2).Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
 
