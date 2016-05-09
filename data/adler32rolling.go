@@ -1,8 +1,11 @@
+// Copyright 2015 Monmohan Singh. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 /**
-The core algorithm is same as provided by adler32 implementation of golang
-The additional code is to provide a mechanism to compute the checksum of a rolling window
+Provide a mechanism to compute the checksum of a rolling window
 in single byte increments by using the hash parts computed earlier
 **/
+
 package data
 
 import (
