@@ -1,3 +1,6 @@
+// Copyright 2015 Monmohan Singh. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 package data
 
 import (
@@ -57,16 +60,15 @@ func TestSameBlocks(t *testing.T) {
 	basesz := 10000
 	basefile := "../testdata/samplefile"
 	bfile, _ := os.Open(basefile)
-    defer bfile.Close()
+	defer bfile.Close()
 
 	ofname := "/tmp/TestSameBlocks"
 	ofile, _ := os.OpenFile(ofname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	io.CopyN(ofile, bfile, int64(basesz))
 	ofile.Close()
-	
-	
+
 	sign := NewFingerprint(ofname, uint32(blksz))
-	
+
 	delta := NewDiff(ofname, *sign)
 
 	for _, blk := range delta {
@@ -78,9 +80,9 @@ func TestSameBlocks(t *testing.T) {
 		t.Log("Diff and Fingerprint block match,\n", blk)
 
 	}
-	
-	fmt.Printf("Sign:=>	 %v\n",sign)
-	
+
+	fmt.Printf("Sign:=>	 %v\n", sign)
+
 	fmt.Printf("Delta: %v\n", delta)
 
 }
