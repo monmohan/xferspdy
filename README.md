@@ -1,6 +1,6 @@
 # xferspdy
 
-This project aims to provide few things
+Fast binary diffs -
 * Command line utilities to diff and patch binary files
 * Library for fingerprint generation, rolling hash and block matching
 
