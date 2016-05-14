@@ -30,7 +30,7 @@ func main() {
 
 	defer pf.Close()
 	if err != nil {
-		glog.Fatalf("Error in reading patch file %v \n, Error :", *fPatch, err)
+		glog.Fatalf("Error in reading patch file %v \n, Error :%s", *fPatch, err)
 	}
 
 	var pd []data.Block
@@ -40,7 +40,7 @@ func main() {
 	glog.V(4).Infof("Patch file read %v \n", pd)
 
 	if err != nil {
-		glog.Fatalf("Error in decoding patch file %v \n, Error :", *fPatch, err)
+		glog.Fatalf("Error in decoding patch file %v \n, Error :%s", *fPatch, err)
 	}
 
 	dir, fname := filepath.Split(*fPath)
@@ -50,7 +50,7 @@ func main() {
 	defer target.Close()
 
 	if err != nil {
-		glog.Fatalf("Error in applying patch  %v \n, Error :", filepath.Join(dir, fname+".patched"), err)
+		glog.Fatalf("Error in applying patch  %v \n, Error :%s", filepath.Join(dir, fname+".patched"), err)
 	}
 
 	data.PatchFile(pd, *fPath, target)

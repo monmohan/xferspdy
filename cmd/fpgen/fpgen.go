@@ -38,7 +38,7 @@ func main() {
 	fpfile, err := os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 
 	if err != nil {
-		glog.Fatalf("Error in creating finger print file %v \n, Error :", filepath.Join(dir, fname+".fingerprint"), err)
+		glog.Fatalf("Error in creating finger print file %v \n, Error :%s", filepath.Join(dir, fname+".fingerprint"), err)
 	}
 
 	enc := gob.NewEncoder(fpfile)

@@ -30,7 +30,7 @@ func main() {
 
 	defer fpfile.Close()
 	if err != nil {
-		glog.Fatalf("Error in reading finger print file %v \n, Error :", *fngprt, err)
+		glog.Fatalf("Error in reading finger print file %v \n, Error : %s", *fngprt, err)
 	}
 	var fp data.Fingerprint
 	dec := gob.NewDecoder(fpfile)
@@ -39,7 +39,7 @@ func main() {
 	glog.V(4).Infof("Read fingerprint %v \n", fp)
 
 	if err != nil {
-		glog.Fatalf("Error in decoding finger print file %v \n, Error :", fp, err)
+		glog.Fatalf("Error in decoding finger print file %v \n, Error : %s", fp, err)
 	}
 
 	diff := data.NewDiff(*fPath, fp)
@@ -51,13 +51,13 @@ func main() {
 	defer nfile.Close()
 
 	if err != nil {
-		glog.Fatalf("Error in creating patch file %v \n, Error :", filepath.Join(dir, fname+".patch"), err)
+		glog.Fatalf("Error in creating patch file %v \n, Error : %s", filepath.Join(dir, fname+".patch"), err)
 	}
 
 	enc := gob.NewEncoder(nfile)
 	err = enc.Encode(diff)
 	if err != nil {
-		glog.Fatalf("Error in encoding Patch file %v \n, Error :", filepath.Join(dir, fname+".patch"), err)
+		glog.Fatalf("Error in encoding Patch file %v \n, Error :%s", filepath.Join(dir, fname+".patch"), err)
 	}
 	fmt.Printf("Patch file created - %v \n ", nfile.Name())
 
