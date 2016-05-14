@@ -22,7 +22,7 @@ func TestDeltaSameFile(t *testing.T) {
 	fmt.Printf(" %v\n", *sign)
 	delta := NewDiff(fname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
-	fmt.Println("===TestDeltaSameFile END===\n..")
+	fmt.Println("===TestDeltaSameFile END===..")
 
 }
 
@@ -34,7 +34,7 @@ func TestDelta2ByteExtraInEnd(t *testing.T) {
 	fname = "../testdata/28bytefile"
 	delta := NewDiff(fname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
-	fmt.Println("==TestDelta2ByteExtraInEnd END==\n")
+	fmt.Println("==TestDelta2ByteExtraInEnd END==")
 
 }
 func TestDelta2ByteExtraInMid(t *testing.T) {
@@ -45,7 +45,7 @@ func TestDelta2ByteExtraInMid(t *testing.T) {
 	nfname := "../testdata/12bytemidchgfile"
 	delta := NewDiff(nfname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
-	fmt.Println("==TestDelta2ByteExtraInMid block size 8 ==\n")
+	fmt.Println("==TestDelta2ByteExtraInMid block size 8 ==")
 	sign = NewFingerprint(ofname, 8)
 
 	delta = NewDiff(nfname, *sign)
@@ -88,7 +88,7 @@ func TestSameBlocks(t *testing.T) {
 }
 
 func TestFewBlocksWithMorebytes(t *testing.T) {
-	fmt.Println("==TestFewBlocksWithMorebytes, add bytes in begin and end of file===\n")
+	fmt.Println("==TestFewBlocksWithMorebytes, add bytes in begin and end of file===")
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 
@@ -158,7 +158,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 }
 
 func TestFirstLastBlockDataDeleted(t *testing.T) {
-	fmt.Println("==TestFirstLastBlockDataDeleted===\n")
+	fmt.Println("==TestFirstLastBlockDataDeleted===")
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 
@@ -226,7 +226,7 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 
 }
 func TestRandomChanges(t *testing.T) {
-	fmt.Println("==TestRandomChanges===\n")
+	fmt.Println("==TestRandomChanges===")
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 
