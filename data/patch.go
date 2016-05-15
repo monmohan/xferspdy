@@ -1,6 +1,8 @@
 // Copyright 2015 Monmohan Singh. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
+//Package data provides the basic interfaces around binary diff and patching process
 package data
 
 import (
@@ -9,10 +11,14 @@ import (
 	"os"
 )
 
+//Patch is a wrapper on PatchFile (current version supports patching only files)
 func Patch(delta []Block, sign Fingerprint, t io.Writer) {
 	PatchFile(delta, sign.Source, t)
 }
 
+//PatchFile creates an updated (patched file), given a source file and Diff
+//The source to the patch is the base version of the file and its fingerprint
+//The diff is the delta computed between the Fingerprint and the new version
 func PatchFile(delta []Block, source string, t io.Writer) {
 	s, e := os.Open(source)
 	defer s.Close()

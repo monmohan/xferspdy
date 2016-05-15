@@ -1,6 +1,8 @@
 // Copyright 2015 Monmohan Singh. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
+//Package data provides the basic interfaces around binary diff and patching process
 package data
 
 import (
@@ -10,6 +12,10 @@ import (
 	"os"
 )
 
+//NewDiff computes a diff between a given file and Fingerprint created from some other file
+//The diff is represented as a slice of Blocks.
+//Matching Blocks are represented just by their hashes, start and end byte position
+//Non-matching blocks are raw binary arrays
 func NewDiff(filename string, sign Fingerprint) []Block {
 	file, err := os.Open(filename)
 	defer file.Close()
@@ -83,7 +89,7 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerpr
 	if e != nil {
 		glog.Fatal(e)
 	}
-	rptr += 1
+	rptr++
 	checksum := st.UpdateWindow(b[0])
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(st.window), s)
 	if matched {

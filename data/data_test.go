@@ -37,9 +37,9 @@ func TestRollingChecksum(t *testing.T) {
 	mid := 5000
 	//mid = 1100
 
-	num_iter := 100
+	numIter := 100
 	st := 3076
-	for num_iter > 0 {
+	for numIter > 0 {
 		x := data[st:mid]
 		libsum := adler32.Checksum(x)
 		libroll, state := Checksum(x)
@@ -48,7 +48,7 @@ func TestRollingChecksum(t *testing.T) {
 			fmt.Printf("Libsum %d libroll %d \n", libsum, libroll)
 			t.FailNow()
 		}
-		st += 1
+		st++
 		x = data[st : mid+1]
 		libsum = adler32.Checksum(x)
 		libroll = state.UpdateWindow(data[mid])
@@ -57,8 +57,8 @@ func TestRollingChecksum(t *testing.T) {
 			fmt.Printf("Libsum %d libroll %d \n", libsum, libroll)
 			t.FailNow()
 		}
-		num_iter -= 1
-		mid += 1
+		numIter--
+		mid++
 	}
 
 }
