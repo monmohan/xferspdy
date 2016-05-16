@@ -20,14 +20,11 @@ OR
 
      `go get github.com/golang/glog`
 
-* Install the binaries (example if you are in xferspdy directory)
+* Install the binaries 
 
-	`go install ./cmd/diff`
+  Run  `go install ./...` from the _xferspdy_ directory
 	    
-  `go install ./cmd/patch`
-    	
-  `go install ./cmd/fpgen`
-
+ 
 ### Try it out
 * Lets say you have a binary file  (e.g. power point presentation _MyPrezVersion1.pptx_).
 * First generate a fingerprint of version 1
