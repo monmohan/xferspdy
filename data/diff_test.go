@@ -111,7 +111,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	nfname := "/tmp/TestFewBlocksWithMorebytes_1"
 	extraBytes := []byte("xxxx")
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-	nfile.Write(extraBytes) //append in the begining
+	nfile.Write(extraBytes) //append in the beginning
 	io.CopyN(nfile, bfile, int64(basesz))
 	nfile.Write(extraBytes) //append in the end
 	nfile.Close()
