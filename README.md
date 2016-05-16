@@ -9,18 +9,11 @@ Reference :
 
 ### Using the fpgen, diff and patch CLI utilities:
 * Need to have go installed, [golang downloads] (https://golang.org/dl/)
-* Clone the project 
-
-    `git clone https://github.com/monmohan/xferspdy.git`
-OR
 * Do go get
 
-     `go get github.com/monmohan/xferspdy`
-* Install dependencies
+       `go get github.com/monmohan/xferspdy/data`
 
-     `go get github.com/golang/glog`
-
-* Install the binaries 
+* Install the command line utilities
 
   Run  `go install ./...` from the _xferspdy_ directory
 	    
