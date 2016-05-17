@@ -1,7 +1,7 @@
 // Copyright 2015 Monmohan Singh. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-package data
+package xferspdy
 
 import (
 	"flag"
@@ -64,11 +64,11 @@ func TestFilePatchWordDocument(t *testing.T) {
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 	blksz := 2048
 
-	ofname := "../testdata/doc_v1.docx"
+	ofname := "testdata/doc_v1.docx"
 	sign := NewFingerprint(ofname, uint32(blksz))
 	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
 
-	nfname := "../testdata/doc_v2.docx"
+	nfname := "testdata/doc_v2.docx"
 	delta := NewDiff(nfname, *sign)
 	glog.V(4).Infof("Delta = %v ", delta)
 

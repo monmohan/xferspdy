@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
-	"github.com/monmohan/xferspdy/data"
+	"github.com/monmohan/xferspdy"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		glog.Fatalf("Error in reading finger print file %v \n, Error : %s", *fngprt, err)
 	}
-	var fp data.Fingerprint
+	var fp xferspdy.Fingerprint
 	dec := gob.NewDecoder(fpfile)
 	err = dec.Decode(&fp)
 
@@ -42,7 +42,7 @@ func main() {
 		glog.Fatalf("Error in decoding finger print file %v \n, Error : %s", fp, err)
 	}
 
-	diff := data.NewDiff(*fPath, fp)
+	diff := xferspdy.NewDiff(*fPath, fp)
 
 	dir, fname := filepath.Split(*fPath)
 

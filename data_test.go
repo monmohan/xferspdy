@@ -1,7 +1,7 @@
 // Copyright 2015 Monmohan Singh. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-package data
+package xferspdy
 
 import (
 	"fmt"
@@ -15,14 +15,14 @@ import (
 
 func TestFingerprintCreate(t *testing.T) {
 	//t.Skip("not now..")
-	sign := NewFingerprint("../testdata/Adler32testresource", 2048)
+	sign := NewFingerprint("testdata/Adler32testresource", 2048)
 	fmt.Printf(" %v\n", sign.Blocksz)
 
 }
 
 func TestRollingChecksum(t *testing.T) {
 	fmt.Println("testing checksum")
-	file, e := os.Open("../testdata/samplefile")
+	file, e := os.Open("testdata/samplefile")
 	defer file.Close()
 
 	if e != nil {
