@@ -1,6 +1,9 @@
 # xferspdy
 
-Fast binary diffs -
+The library currently provides binary diff and patch API in golang. 
+The goal is provide faster data transfer over HTTP (WIP).
+
+#### Supported today:
 * Command line utilities to diff and patch binary files
 * Library for fingerprint generation, rolling hash and block matching
 
