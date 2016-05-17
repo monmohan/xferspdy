@@ -11,7 +11,7 @@ Reference :
 * Need to have go installed, [golang downloads] (https://golang.org/dl/)
 * Do go get
 
-       `go get github.com/monmohan/xferspdy/data`
+       `go get github.com/monmohan/xferspdy`
 
 * Install the command line utilities
 
