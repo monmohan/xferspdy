@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
-	"github.com/monmohan/xferspdy/data"
+	"github.com/monmohan/xferspdy"
 	"os"
 	"path/filepath"
 )
@@ -33,7 +33,7 @@ func main() {
 		glog.Fatalf("Error in reading patch file %v \n, Error :%s", *fPatch, err)
 	}
 
-	var pd []data.Block
+	var pd []xferspdy.Block
 	dec := gob.NewDecoder(pf)
 	err = dec.Decode(&pd)
 
@@ -53,7 +53,7 @@ func main() {
 		glog.Fatalf("Error in applying patch  %v \n, Error :%s", filepath.Join(dir, fname+".patched"), err)
 	}
 
-	data.PatchFile(pd, *fPath, target)
+	xferspdy.PatchFile(pd, *fPath, target)
 
 	fmt.Printf("Patch applied, Target file generated - %v \n ", target.Name())
 

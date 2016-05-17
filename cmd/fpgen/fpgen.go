@@ -8,7 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
-	"github.com/monmohan/xferspdy/data"
+	"github.com/monmohan/xferspdy"
 	"os"
 	"path/filepath"
 )
@@ -28,7 +28,7 @@ func main() {
 	}
 	glog.V(2).Infof("File path %s , Block Size %d \n", *fPath, *blockSz)
 
-	fgprt := data.NewFingerprint(*fPath, uint32(*blockSz))
+	fgprt := xferspdy.NewFingerprint(*fPath, uint32(*blockSz))
 	glog.V(4).Infof("Signature  %s \n", *fgprt)
 
 	dir, fname := filepath.Split(*fPath)
@@ -49,7 +49,7 @@ func main() {
 	fpfile, err = os.Open(fname)
 	defer fpfile.Close()
 
-	var fp data.Fingerprint
+	var fp xferspdy.Fingerprint
 	dec := gob.NewDecoder(fpfile)
 	err = dec.Decode(&fp)
 	if *verify {
