@@ -17,7 +17,7 @@ var logLevel = flag.Int("lv", 3, "log level")
 
 func TestDeltaSameFile(t *testing.T) {
 	fmt.Println("===TestDeltaSameFile===..")
-	fname := "../testdata/26bytefile"
+	fname := "testdata/26bytefile"
 	sign := NewFingerprint(fname, 16)
 	fmt.Printf(" %v\n", *sign)
 	delta := NewDiff(fname, *sign)
@@ -28,10 +28,10 @@ func TestDeltaSameFile(t *testing.T) {
 
 func TestDelta2ByteExtraInEnd(t *testing.T) {
 	fmt.Println("==TestDelta2ByteExtraInEnd==")
-	fname := "../testdata/26bytefile"
+	fname := "testdata/26bytefile"
 	sign := NewFingerprint(fname, 24)
 	fmt.Printf(" %v\n", *sign)
-	fname = "../testdata/28bytefile"
+	fname = "testdata/28bytefile"
 	delta := NewDiff(fname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
 	fmt.Println("==TestDelta2ByteExtraInEnd END==")
@@ -39,10 +39,10 @@ func TestDelta2ByteExtraInEnd(t *testing.T) {
 }
 func TestDelta2ByteExtraInMid(t *testing.T) {
 	fmt.Println("==TestDelta2ByteExtraInMid, block size 5 ==")
-	ofname := "../testdata/10bytefile"
+	ofname := "testdata/10bytefile"
 	sign := NewFingerprint(ofname, 5)
 	fmt.Printf(" %v\n", *sign)
-	nfname := "../testdata/12bytemidchgfile"
+	nfname := "testdata/12bytemidchgfile"
 	delta := NewDiff(nfname, *sign)
 	fmt.Printf("Delta: %v\n", delta)
 	fmt.Println("==TestDelta2ByteExtraInMid block size 8 ==")
@@ -58,7 +58,7 @@ func TestSameBlocks(t *testing.T) {
 
 	blksz := 1024
 	basesz := 10000
-	basefile := "../testdata/samplefile"
+	basefile := "testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 	defer bfile.Close()
 
@@ -95,7 +95,7 @@ func TestFewBlocksWithMorebytes(t *testing.T) {
 	fmt.Println("log v value ", flag.Lookup("v").Value)
 	blksz := 64 * 1024
 	basesz := 200000
-	basefile := "../testdata/samplefile"
+	basefile := "testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
@@ -166,7 +166,7 @@ func TestFirstLastBlockDataDeleted(t *testing.T) {
 	basesz := 200000
 	delBytes := make([]byte, 1000)
 
-	basefile := "../testdata/samplefile"
+	basefile := "testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
@@ -233,7 +233,7 @@ func TestRandomChanges(t *testing.T) {
 	blksz := 1024
 	basesz := 200000
 
-	basefile := "../testdata/samplefile"
+	basefile := "testdata/samplefile"
 	bfile, _ := os.Open(basefile)
 
 	defer bfile.Close()
