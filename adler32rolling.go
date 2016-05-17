@@ -6,7 +6,7 @@ Provide a mechanism to compute the checksum of a rolling window
 in single byte increments by using the hash parts computed earlier
 **/
 
-package data
+package xferspdy
 
 import (
 	"github.com/golang/glog"

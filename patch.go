@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 //Package data provides the basic interfaces around binary diff and patching process
-package data
+package xferspdy
 
 import (
 	"github.com/golang/glog"
