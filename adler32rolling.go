@@ -1,10 +1,6 @@
 // Copyright 2015 Monmohan Singh. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-/**
-Provide a mechanism to compute the checksum of a rolling window
-in single byte increments by using the hash parts computed earlier
-**/
 
 package xferspdy
 
@@ -31,9 +27,9 @@ type State struct {
 	s2     uint32
 }
 
-//Checksum returns the Adler-32 checksum, computed for the given byte array
-//In addition, returns a State that captures the interim results during computation
-//The State can be used to update the byte[] window and compute rolling hash
+//Checksum returns the Adler-32 checksum, computed for the given byte slice.
+//In addition, it returns a State that captures the interim results during computation.
+//This State can then be used to update the byte[] window and compute rolling hash
 func Checksum(p []byte) (uint32, *State) {
 	glog.V(4).Infof("Length of buffer %d \n Calc checksum for \n %v \n", len(p), p)
 	s1, s2 := uint32(1&0xffff), uint32(1>>16)
@@ -56,10 +52,9 @@ func Checksum(p []byte) (uint32, *State) {
 	return uint32(s2<<16 | s1), &State{orig, s1, s2}
 }
 
-//UpdateWindow returns rolling Adler-32 checksum after updating the window
-//The checksum is not calculated from scratch.
-//Instead the captured byte array window in State struct is updated,
-//similar to circular buffer and rolling hash is calculated
+// Update provides a mechanism to compute the checksum of a rolling window in single byte increments by using the hash parts computed earlier
+// The checksum is not calculated from scratch. Instead the captured byte slice window in State struct is updated,
+// similar to a circular buffer, and a rolling hash is calculated
 func (s *State) UpdateWindow(nb byte) uint32 {
 	s.window = append(s.window, nb)
 	x := s.window[0]

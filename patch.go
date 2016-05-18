@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//Package xferspdy provides the basic interfaces around binary diff and patching process
 package xferspdy
 
 import (
@@ -11,14 +10,14 @@ import (
 	"os"
 )
 
-//Patch is a wrapper on PatchFile (current version supports patching only files)
+//Patch is a wrapper on PatchFile (current version only supports patching of local files)
 func Patch(delta []Block, sign Fingerprint, t io.Writer) {
 	PatchFile(delta, sign.Source, t)
 }
 
-//PatchFile creates an updated (patched file), given a source file and Diff
-//The source to the patch is the base version of the file and its fingerprint
-//The diff is the delta computed between the Fingerprint and the new version
+// PatchFile takes a source file and Diff as input, and writes out to the Writer.
+// The source file would normally be the base version of the file  and
+// the Diff is the delta computed by using the Fingerprint generated for the base file and the new version of the file
 func PatchFile(delta []Block, source string, t io.Writer) {
 	s, e := os.Open(source)
 	defer s.Close()

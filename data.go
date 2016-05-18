@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//Package xferspdy provides the basic interfaces around binary diff and patching process
+// Package xferspdy provides the basic interfaces around binary diff and patching process
 package xferspdy
 
 import (
@@ -14,29 +14,28 @@ import (
 	"os"
 )
 
-//Fingerprint of a given File.
-//Read file as a set of Blocks
-//Calculate an Adler-32 and SHA256 hashes for the Block.
-//Creata a lookup map from the hashes to the Block
-type Fingerprint struct {
-	Blocksz  uint32
-	BlockMap map[uint32]map[[sha256.Size]byte]Block
-	Source   string
-}
-
-//Block represent a byte array chunk
-//For each block, following are computed
-//Adler-32 and SHA256 checksum
-//Start and End byte pos of the block
-//Whether or not its a data block
-//If this is a data block, RawBytes will capture the byte data
-//represented by this block
+// Block represent a byte slice from the file. For each block, following are computed.
+//
+// * Adler-32 and SHA256 checksum,
+//
+// * Start and End byte pos of the block,
+//
+// * Whether or not its a data block -If this is a data block, RawBytes will capture the byte data represented by this block
 type Block struct {
 	Start, End int64
 	Checksum32 uint32
 	Sha256hash [sha256.Size]byte
 	HasData    bool
 	RawBytes   []byte
+}
+
+// Fingerprint of a given File, encapsulates the following mapping
+//   Adler-32 hash of Block --> SHA256 hash of Block -->Block
+// Also stores the block size and the source
+type Fingerprint struct {
+	Blocksz  uint32
+	BlockMap map[uint32]map[[sha256.Size]byte]Block
+	Source   string
 }
 
 func (b Block) String() string {
@@ -54,7 +53,7 @@ func (f Fingerprint) String() string {
 	return buf
 }
 
-//NewFingerprint computes the fingerprint for a file and given blocksize
+// NewFingerprint creates a Fingerprint for a given file and blocksize
 func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 	bufz := make([]byte, blocksize)
 	file, e := os.Open(filename)
