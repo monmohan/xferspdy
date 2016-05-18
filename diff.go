@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//Package xferspdy provides the basic interfaces around binary diff and patching process
 package xferspdy
 
 import (
@@ -12,10 +11,9 @@ import (
 	"os"
 )
 
-//NewDiff computes a diff between a given file and Fingerprint created from some other file
-//The diff is represented as a slice of Blocks.
-//Matching Blocks are represented just by their hashes, start and end byte position
-//Non-matching blocks are raw binary arrays
+// NewDiff computes a diff between a given file and Fingerprint created from some other file
+// The diff is represented as a slice of Blocks. Matching Blocks are represented just by their hashes, start and end byte position
+// Non-matching blocks are raw binary arrays.
 func NewDiff(filename string, sign Fingerprint) []Block {
 	file, err := os.Open(filename)
 	defer file.Close()

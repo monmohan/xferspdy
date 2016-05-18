@@ -62,3 +62,19 @@ func TestRollingChecksum(t *testing.T) {
 	}
 
 }
+
+func Example() {
+	//Create fingerprint of a file
+	fingerprint := NewFingerprint("/path/foo_v1.binary", 1024)
+
+	//Say the file was updated
+	//Lets generate the diff
+	diff := NewDiff("/path/foo_v2.binary", *fingerprint)
+
+	//diff is sufficient to recover/recreate the modified file, given the base/source and the diff.
+	modifiedFile, _ := os.OpenFile("/path/foo_v2_from_v1.binary", os.O_CREATE|os.O_WRONLY, 0777)
+
+	//This writes the output to modifiedFile (Writer). The result will be the same binary as /path/foo_v2.binary
+	PatchFile(diff, "/path/foo_v1.binary", modifiedFile)
+
+}
