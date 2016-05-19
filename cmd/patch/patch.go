@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	fPatch = flag.String("patch", "", "Path to the patch file ")
-	fPath  = flag.String("base", "", "Path to older version of the file to apply patch on")
+	fPatch = flag.String("patch", "", "Path to the patch file, REQUIRED ")
+	fPath  = flag.String("base", "", "Path to older version of the file to apply patch on, REQUIRED")
 )
 
 func main() {

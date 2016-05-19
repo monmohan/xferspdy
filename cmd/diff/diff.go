@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	fngprt = flag.String("fingerprint", "", "Path to the finger print file of older version")
-	fPath  = flag.String("file", "", "Path to new version of the file to diff with")
+	fngprt = flag.String("fingerprint", "", "Path to the finger print file of older version, REQUIRED")
+	fPath  = flag.String("file", "", "Path to new version of the file to diff with, REQUIRED")
 )
 
 func main() {
