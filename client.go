@@ -34,8 +34,17 @@ func NewRPCClient(useHTTP bool, network string, address string) *RPCClient {
 }
 
 func (rpcl *RPCClient) PutObject(req PutRequest) (obj Object, err error) {
-	var reply PutResponse
+	var reply Response
 	err = rpcl.Client.Call("Provider.PutObject", &req, &reply)
+	if err != nil {
+		glog.Fatal("Call errror:", err)
+	}
+	return reply.Object, err
+}
+
+func (rpcl *RPCClient) PatchObject(req PutRequest) (obj Object, err error) {
+	var reply Response
+	err = rpcl.Client.Call("Provider.PatchObject", &req, &reply)
 	if err != nil {
 		glog.Fatal("Call errror:", err)
 	}

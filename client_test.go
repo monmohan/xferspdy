@@ -17,19 +17,24 @@ const (
 	network, address, useHTTP, storedir = "tcp", "localhost:9999", false, ".xferspdystore"
 )
 
-func TestRpcClient1(t *testing.T) {
+func TestClientPutRequest(t *testing.T) {
 	runServer()
 	fmt.Println("Simple RPC test with small file")
 	fname := "testdata/26bytefile"
 	r, _ := os.Open(fname)
 	buf, e := ioutil.ReadAll(r)
 	client := NewRPCClient(useHTTP, network, address)
-	o, e := client.PutObject(PutRequest{Data: buf, Key: "testkey", Blocksize: 8})
+	o, e := client.PutObject(PutRequest{Data: buf, Key: "TestClientPutRequestKey", Blocksize: 8})
 	if e != nil {
 		fmt.Printf("error ..%s", e)
 		t.Fail()
 	}
-	fmt.Printf("Returned object %v", o)
+	fmt.Printf("Generated fingerprint %v", o.Fingerprint)
+	fo := NewFingerprint(fname, 8)
+	fo.Source = "TestClientPutRequestKey"
+	if !o.Fingerprint.DeepEqual(fo) {
+		t.Fail()
+	}
 }
 
 func getStorageDir() string {
