@@ -4,7 +4,9 @@
 package xferspdy
 
 import (
+	"flag"
 	"fmt"
+	"github.com/golang/glog"
 	"io/ioutil"
 	"net"
 	"os"
@@ -19,7 +21,7 @@ const (
 
 func TestClientPutRequest(t *testing.T) {
 	runServer()
-	fmt.Println("Simple RPC test with small file")
+	fmt.Println("Test RPC put..")
 	fname := "testdata/26bytefile"
 	r, _ := os.Open(fname)
 	buf, e := ioutil.ReadAll(r)
@@ -29,10 +31,48 @@ func TestClientPutRequest(t *testing.T) {
 		fmt.Printf("error ..%s", e)
 		t.Fail()
 	}
-	fmt.Printf("Generated fingerprint %v", o.Fingerprint)
+	glog.V(4).Infof("Generated fingerprint %v", o.Fingerprint)
 	fo := NewFingerprint(fname, 8)
 	fo.Source = "TestClientPutRequestKey"
 	if !o.Fingerprint.DeepEqual(fo) {
+		t.Fail()
+	}
+}
+
+func TestClientPatchRequest(t *testing.T) {
+
+	fmt.Println("Test RPC patch a word document")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+
+	fmt.Println("log v value ", flag.Lookup("v").Value)
+	blksz := 2048
+	key := "TestClientPatchRequestKey"
+
+	ofname := "testdata/doc_v1.docx"
+	r, _ := os.Open(ofname)
+	buf, e := ioutil.ReadAll(r)
+	client := NewRPCClient(useHTTP, network, address)
+	o, e := client.PutObject(PutRequest{Data: buf, Key: key, Blocksize: uint32(blksz)})
+
+	glog.V(4).Infof("Fingerprint for v1 %v\n %v\n", ofname, o.Fingerprint)
+
+	nfname := "testdata/doc_v2.docx"
+	delta := NewDiff(nfname, *o.Fingerprint)
+	glog.V(4).Infof("Delta = %v ", delta)
+
+	patched, e := client.PatchObject(PatchRequest{Delta: delta, Blocksize: uint32(blksz), Key: key})
+	if e != nil {
+		fmt.Printf("error ..%s", e)
+		t.Fail()
+	}
+	v2fingerprint := NewFingerprint(nfname, uint32(blksz))
+	glog.V(4).Infof("Generated fingerprint for version 2 %v\n", v2fingerprint)
+	//update the source to key
+	v2fingerprint.Source = key
+
+	glog.V(4).Infof("Generated fingerprint after patch %v\n", patched.Fingerprint)
+	if !v2fingerprint.DeepEqual(patched.Fingerprint) {
 		t.Fail()
 	}
 }
@@ -50,6 +90,6 @@ func runServer() {
 		fmt.Errorf("listen error:", e)
 	}
 	p := NewProvider(getStorageDir())
-	fmt.Printf("Provider %v", *p)
+	glog.V(2).Infof("Provider %v", *p)
 	go ServeRPC(useHTTP, l, p)
 }

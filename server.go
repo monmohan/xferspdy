@@ -45,7 +45,7 @@ func (xrpc *Provider) PutObject(preq *PutRequest, presp *Response) error {
 //TODO Version support
 func (xrpc *Provider) PatchObject(preq *PatchRequest, presp *Response) error {
 	sourceFile := filepath.Join(xrpc.FileStorePath, preq.Key)
-	patchedFile := filepath.Join(xrpc.FileStorePath, preq.Key, ".patched")
+	patchedFile := filepath.Join(xrpc.FileStorePath, preq.Key+".patched")
 
 	pfile, _ := os.OpenFile(patchedFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer pfile.Close()
@@ -62,7 +62,9 @@ func (xrpc *Provider) PatchObject(preq *PatchRequest, presp *Response) error {
 		return fmt.Errorf("Failed to an patch file %s, error %s", preq.Key, e)
 
 	}
-	f := NewFingerprint(sourceFile, preq.Blocksize)
+	r, _ := os.Open(sourceFile)
+	f := NewFingerprintFromReader(r, preq.Blocksize)
+	f.Source = preq.Key
 	presp.Object = Object{Key: preq.Key, Fingerprint: f}
 	glog.V(2).Infof("Request successfully processed, Patch file created %s", patchedFile)
 
@@ -72,10 +74,11 @@ func (xrpc *Provider) PatchObject(preq *PatchRequest, presp *Response) error {
 func ServeRPC(useHTTP bool, listener net.Listener, provider *Provider) {
 	rpc.Register(provider)
 	if useHTTP {
+		glog.V(2).Infof("Starting RPC over HTTP..")
 		rpc.HandleHTTP()
 		http.Serve(listener, nil)
 	} else {
-		fmt.Println("Starting RPC..")
+		glog.V(2).Infof("Starting RPC Server..")
 		rpc.Accept(listener)
 	}
 

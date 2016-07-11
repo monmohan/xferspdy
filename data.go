@@ -77,7 +77,7 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 			start = block.End
 		} else {
 			if err == io.EOF {
-				glog.V(2).Infoln("Reader read complete")
+				glog.V(2).Infoln("Fingerprint generation: Reader read complete")
 			} else {
 				glog.Fatal(err)
 			}
@@ -104,7 +104,7 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 }
 
 func addBlock(f *Fingerprint, b Block) {
-	glog.V(2).Infof("Adding Block %v ", b)
+	glog.V(3).Infof("Adding Block %v ", b)
 	if sha2blk := f.BlockMap[b.Checksum32]; sha2blk == nil {
 		f.BlockMap[b.Checksum32] = make(map[[sha256.Size]byte]Block)
 	}

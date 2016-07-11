@@ -42,7 +42,7 @@ func (rpcl *RPCClient) PutObject(req PutRequest) (obj Object, err error) {
 	return reply.Object, err
 }
 
-func (rpcl *RPCClient) PatchObject(req PutRequest) (obj Object, err error) {
+func (rpcl *RPCClient) PatchObject(req PatchRequest) (obj Object, err error) {
 	var reply Response
 	err = rpcl.Client.Call("Provider.PatchObject", &req, &reply)
 	if err != nil {
