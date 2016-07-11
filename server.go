@@ -10,12 +10,35 @@ import (
 	"encoding/gob"
 	"fmt"
 	"github.com/golang/glog"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/rpc"
 	"os"
 	"path/filepath"
 )
+
+//TODO support range request
+func (xrpc *Provider) GetObject(preq *GetRequest, presp *Response) error {
+
+	ofile, _ := os.Open(filepath.Join(xrpc.FileStorePath, preq.Key))
+	defer ofile.Close()
+
+	var fp Fingerprint
+	if preq.Fingerprint {
+		fpfile, _ := os.Open(filepath.Join(xrpc.FileStorePath, preq.Key+".fingerprint"))
+		defer fpfile.Close()
+		dec := gob.NewDecoder(fpfile)
+		if e := dec.Decode(&fp); e != nil {
+			return e
+		}
+
+	}
+	buf, _ := ioutil.ReadAll(ofile)
+	presp.Object = Object{Key: preq.Key, Fingerprint: &fp, Data: buf}
+	glog.V(2).Infof("Request successfully processed, Returning file %s", ofile.Name())
+	return nil
+}
 
 //TODO will not work for large files
 func (xrpc *Provider) PutObject(preq *PutRequest, presp *Response) error {
@@ -31,11 +54,10 @@ func (xrpc *Provider) PutObject(preq *PutRequest, presp *Response) error {
 	}
 	//No version support
 	f := NewFingerprintFromReader(bytes.NewReader(preq.Data), preq.Blocksize)
-
+	f.Source = preq.Key
 	enc := gob.NewEncoder(fpfile)
 	enc.Encode(*f)
 
-	f.Source = preq.Key
 	presp.Object = Object{Key: preq.Key, Fingerprint: f}
 	glog.V(2).Infof("Request successfully processed, bytes written %d", n)
 
