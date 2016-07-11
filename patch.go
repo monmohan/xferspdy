@@ -18,7 +18,7 @@ func Patch(delta []Block, sign Fingerprint, t io.Writer) {
 // PatchFile takes a source file and Diff as input, and writes out to the Writer.
 // The source file would normally be the base version of the file  and
 // the Diff is the delta computed by using the Fingerprint generated for the base file and the new version of the file
-func PatchFile(delta []Block, source string, t io.Writer) {
+func PatchFile(delta []Block, source string, t io.Writer) error {
 	s, e := os.Open(source)
 	defer s.Close()
 	wptr := int64(0)
@@ -35,8 +35,11 @@ func PatchFile(delta []Block, source string, t io.Writer) {
 			s.Seek(block.Start, 0)
 			ds := block.End - block.Start
 			glog.V(3).Infof("Writing RawBytes block, Block=%v\n , wptr=%v , num bytes = %v \n", block, wptr, ds)
-			io.CopyN(t, s, block.End-block.Start)
+			if _, e := io.CopyN(t, s, block.End-block.Start); e != nil {
+				return e
+			}
 			wptr += ds
 		}
 	}
+	return nil
 }

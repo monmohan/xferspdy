@@ -53,15 +53,9 @@ func (f Fingerprint) String() string {
 	return buf
 }
 
-// NewFingerprint creates a Fingerprint for a given file and blocksize
-func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
+// NewFingerprint creates a Fingerprint for a given reader and blocksize
+func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 	bufz := make([]byte, blocksize)
-	file, e := os.Open(filename)
-	defer file.Close()
-
-	if e != nil {
-		glog.Fatal(e)
-	}
 
 	n, start := 0, int64(0)
 
@@ -71,10 +65,10 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 	)
 
 	fngprt := Fingerprint{
-		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block), Source: filename}
+		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
 
 	for err == nil {
-		n, err = file.Read(bufz)
+		n, err = r.Read(bufz)
 		if err == nil {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
@@ -83,7 +77,7 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 			start = block.End
 		} else {
 			if err == io.EOF {
-				glog.V(2).Infoln("File read complete")
+				glog.V(2).Infoln("Fingerprint generation: Reader read complete")
 			} else {
 				glog.Fatal(err)
 			}
@@ -91,12 +85,26 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 		}
 
 	}
+
 	return &fngprt
 
 }
 
+// NewFingerprint creates a Fingerprint for a given file and blocksize
+func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
+	file, e := os.Open(filename)
+	if e != nil {
+		glog.Fatalf("Unable to open file %s %s", filename, e)
+	}
+	defer file.Close()
+	f := NewFingerprintFromReader(file, blocksize)
+	f.Source = filename
+	return f
+
+}
+
 func addBlock(f *Fingerprint, b Block) {
-	glog.V(2).Infof("Adding Block %v ", b)
+	glog.V(3).Infof("Adding Block %v ", b)
 	if sha2blk := f.BlockMap[b.Checksum32]; sha2blk == nil {
 		f.BlockMap[b.Checksum32] = make(map[[sha256.Size]byte]Block)
 	}

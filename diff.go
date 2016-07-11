@@ -52,12 +52,12 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[
 	checksum, state := Checksum(buf)
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(buf), s)
 	if matched {
-		glog.V(2).Infof("Matched block %v \n", matchblock)
+		glog.V(3).Infof("Matched block %v \n", matchblock)
 		*delta = append(*delta, matchblock)
 		rptr += int64(brem)
 		processBlock(r, rptr, filesz, s, delta)
 	} else {
-		glog.V(2).Infof("Block not matched\n")
+		glog.V(3).Infof("Block not matched\n")
 		*delta = append(*delta, Block{HasData: true, Start: rptr})
 		processRolling(r, state, rptr, filesz, s, delta)
 	}
@@ -103,11 +103,28 @@ func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Fingerprint) (mbloc
 	glog.V(3).Infof("comparing input checksum %d ", checksum)
 	if sha2blk, ok := s.BlockMap[checksum]; ok {
 		if block, m := sha2blk[sha256]; m {
-			glog.V(2).Infof("found match ")
+			glog.V(3).Infof("found match ")
 			return block, true
 		}
 	}
 
 	return Block{}, false
 
+}
+
+func (f *Fingerprint) DeepEqual(other *Fingerprint) bool {
+	eq := (f.Source == other.Source) && (f.Blocksz == other.Blocksz) && len(f.BlockMap) == len(other.BlockMap)
+
+	if eq {
+		for _, shablkmap := range f.BlockMap {
+			for _, blk := range shablkmap {
+				if _, eq = matchBlock(blk.Checksum32, blk.Sha256hash, *other); !eq {
+					return eq
+				}
+
+			}
+
+		}
+	}
+	return eq
 }
