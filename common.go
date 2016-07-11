@@ -14,6 +14,7 @@ type Object struct {
 	Key         string
 	VersionId   string
 	Fingerprint *Fingerprint
+	Data        []byte
 }
 
 type PutRequest struct {
@@ -26,6 +27,11 @@ type PatchRequest struct {
 	Delta     []Block
 	Key       string
 	Blocksize uint32 //block size to use when generating the patched file fingerprint
+}
+
+type GetRequest struct {
+	Key         string
+	Fingerprint bool
 }
 
 type Response struct {

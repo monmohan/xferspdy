@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -20,8 +21,10 @@ const (
 )
 
 func TestClientPutRequest(t *testing.T) {
-	runServer()
+
 	fmt.Println("Test RPC put..")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 	fname := "testdata/26bytefile"
 	r, _ := os.Open(fname)
 	buf, e := ioutil.ReadAll(r)
@@ -77,6 +80,42 @@ func TestClientPatchRequest(t *testing.T) {
 	}
 }
 
+func TestClientGetRequest(t *testing.T) {
+
+	fmt.Println("Test RPC Get..")
+	fmt.Printf("log level %v\n", *logLevel)
+	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
+	key := "TestClientGetRequestKey"
+	fname := "testdata/26bytefile"
+	r, _ := os.Open(fname)
+	buf, e := ioutil.ReadAll(r)
+	client := NewRPCClient(useHTTP, network, address)
+	o, e := client.PutObject(PutRequest{Data: buf, Key: key, Blocksize: 8})
+	if e != nil {
+		fmt.Printf("error ..%s", e)
+		t.Fail()
+	}
+
+	fp := o.Fingerprint
+
+	//Now do a get
+	o, e = client.GetObject(GetRequest{Key: key, Fingerprint: false})
+	if e != nil {
+		fmt.Printf("error ..%s", e)
+		t.Fail()
+	}
+	if !reflect.DeepEqual(buf, o.Data) {
+		fmt.Printf("Data doesn't match %s\n %v\n %v\n", o.Key, o.Data, buf)
+		t.Fail()
+	}
+
+	o, e = client.GetObject(GetRequest{Key: key, Fingerprint: true})
+	if !o.Fingerprint.DeepEqual(fp) {
+		fmt.Printf("Fingerprint doesn't match %s, source 1 %s, source 2 %s\n", o.Key, o.Fingerprint.Source, fp.Source)
+		t.Fail()
+	}
+}
+
 func getStorageDir() string {
 	u, _ := user.Current()
 	return filepath.Join(u.HomeDir, storedir)
@@ -92,4 +131,10 @@ func runServer() {
 	p := NewProvider(getStorageDir())
 	glog.V(2).Infof("Provider %v", *p)
 	go ServeRPC(useHTTP, l, p)
+}
+
+func TestMain(m *testing.M) {
+	runServer()
+	flag.Parse()
+	os.Exit(m.Run())
 }
