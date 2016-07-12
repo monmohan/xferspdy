@@ -126,7 +126,7 @@ func runServer() {
 
 	l, e := net.Listen(network, address)
 	if e != nil {
-		fmt.Errorf("listen error:", e)
+		glog.Errorf("listen error: %s", e)
 	}
 	p := NewProvider(getStorageDir())
 	glog.V(2).Infof("Provider %v", *p)

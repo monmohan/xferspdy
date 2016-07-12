@@ -49,7 +49,7 @@ func (xrpc *Provider) PutObject(preq *PutRequest, presp *Response) error {
 	defer fpfile.Close()
 	n, e := ofile.Write(preq.Data)
 	if e != nil {
-		return fmt.Errorf("Failed to create file %s, error %s", preq.Key)
+		return fmt.Errorf("Failed to create file %s, error %s", preq.Key, e)
 
 	}
 	//No version support
