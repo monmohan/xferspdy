@@ -42,7 +42,8 @@ func (xrpc *Provider) GetObject(preq *GetRequest, presp *Response) error {
 
 //TODO will not work for large files
 func (xrpc *Provider) PutObject(preq *PutRequest, presp *Response) error {
-
+	//TODO use a better filemode
+	//TODO handle errors properly
 	ofile, _ := os.OpenFile(filepath.Join(xrpc.FileStorePath, preq.Key), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	fpfile, _ := os.OpenFile(filepath.Join(xrpc.FileStorePath, preq.Key+".fingerprint"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer ofile.Close()
