@@ -10,9 +10,12 @@ import (
 	"net/rpc"
 )
 
+//Client library to support, upload download and patch of files
 type Client interface {
 	PutObject(req PutRequest) (obj Object, err error)
 }
+
+//Sample RPC Client
 type RPCClient struct {
 	Client *rpc.Client
 }

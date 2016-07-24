@@ -38,11 +38,15 @@ type Response struct {
 	Object Object
 }
 
+//Provider defines where a object would be stored
+//This is a sample provider which stores files in local file system
 type Provider struct {
 	//TODO The store should be configurable
 	FileStorePath string
 }
 
+//NewProvider creates a provider which stores file under the given filestorepath
+//All uploaded files will be stored under filestorepath as root
 func NewProvider(filestorepath string) *Provider {
 	absPath, e := filepath.Abs(filestorepath)
 	if e != nil {

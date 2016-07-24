@@ -18,6 +18,11 @@ import (
 	"path/filepath"
 )
 
+/**
+This file provides server functions which allow download upload and patch of a given file
+This is just a proof of concept and not production ready. For example their is no versioning support
+and all files are stored in single folder root
+**/
 //TODO support range request
 func (xrpc *Provider) GetObject(preq *GetRequest, presp *Response) error {
 
@@ -93,6 +98,7 @@ func (xrpc *Provider) PatchObject(preq *PatchRequest, presp *Response) error {
 	return nil
 }
 
+//Expose Provider functions over RPC, set useHTTP to true for native transport
 func ServeRPC(useHTTP bool, listener net.Listener, provider *Provider) {
 	rpc.Register(provider)
 	if useHTTP {
