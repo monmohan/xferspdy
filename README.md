@@ -1,7 +1,7 @@
 # xferspdy
 
-The library currently provides binary diff and patch API in golang. 
-The goal is provide faster data transfer over HTTP in future versions.
+This library provides binary diff and patch API in golang. 
+
 
 #### Supported today:
 * Command line utilities to diff and patch binary files
@@ -52,4 +52,5 @@ The library also provides CLI wrappers on API.
  *This file would exactly be same as MyPrezVersion2.pptx.*
 
 *NOTE:* diff and patch are also common utilities present on most distributions so its better to give explicit path to these binaries. for example use _$GOPATH/bin/diff_ and _$GOPATH/bin/patch_
+
 
