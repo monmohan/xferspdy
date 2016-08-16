@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestFingerprintCreate(t *testing.T) {
@@ -59,6 +60,41 @@ func TestRollingChecksum(t *testing.T) {
 		}
 		numIter--
 		mid++
+	}
+
+}
+
+func TestNormalVsFastfpgen(t *testing.T) {
+	fmt.Println("==TestNormalVsFastfpgen==\n")
+
+	blksz := 1024
+	//basefile := "testdata/samplefile"
+	basefile := "/Users/msingh/Downloads/golang.mp4"
+	bfile, _ := os.Open(basefile)
+	defer bfile.Close()
+	start := time.Now()
+	sign1 := NewFingerprintFromReader(bfile, uint32(blksz))
+	fmt.Printf("Time taken in Seq mode: %s \n", time.Now().Sub(start))
+
+	bfile.Seek(0, 0)
+	st := time.Now()
+	sign2 := NewFingerprintFast(bfile, uint32(blksz))
+	fmt.Printf("Time taken in Fast mode: %s \n", time.Now().Sub(st))
+
+	if len(sign1.BlockMap) != len(sign2.BlockMap) {
+		t.Errorf("Fingerprint size don't match %v, %v \n", len(sign1.BlockMap), len(sign2.BlockMap))
+		t.FailNow()
+	}
+
+	for csum32, innermap := range sign2.BlockMap {
+		for sha256, blk := range innermap {
+			if b, ok := matchBlock(csum32, sha256, *sign1); !(ok && (b.Start == blk.Start && b.End == blk.End)) {
+				t.Errorf("failed block match %v \n at blk %v ", b, blk)
+				t.FailNow()
+			}
+
+		}
+
 	}
 
 }

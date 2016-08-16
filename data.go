@@ -14,6 +14,8 @@ import (
 	"os"
 )
 
+var usefastfpgen = false
+
 // Block represent a byte slice from the file. For each block, following are computed.
 //
 // * Adler-32 and SHA256 checksum,
@@ -55,6 +57,9 @@ func (f Fingerprint) String() string {
 
 // NewFingerprint creates a Fingerprint for a given reader and blocksize
 func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
+	if usefastfpgen {
+		return NewFingerprintFast(r, blocksize)
+	}
 	bufz := make([]byte, blocksize)
 
 	n, start := 0, int64(0)
@@ -73,7 +78,7 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
 				Sha256hash: sha256.Sum256(bufz[0:n])}
-			addBlock(&fngprt, block)
+			addBlock(&fngprt, &block)
 			start = block.End
 		} else {
 			if err == io.EOF {
@@ -84,6 +89,21 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 
 		}
 
+	}
+
+	return &fngprt
+
+}
+
+// NewFingerprint creates a Fingerprint for a given reader and blocksize
+func NewFingerprintFast(r io.Reader, blocksize uint32) *Fingerprint {
+	fngprt := Fingerprint{
+		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
+
+	blkin := readBlocks(r, blocksize)
+	blkout := fillBlocks(blkin)
+	for b := range blkout {
+		addBlock(&fngprt, b)
 	}
 
 	return &fngprt
@@ -103,11 +123,59 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 
 }
 
-func addBlock(f *Fingerprint, b Block) {
-	glog.V(3).Infof("Adding Block %v ", b)
+func addBlock(f *Fingerprint, b *Block) {
+
+	glog.V(3).Infof("Adding Block %v ", *b)
 	if sha2blk := f.BlockMap[b.Checksum32]; sha2blk == nil {
 		f.BlockMap[b.Checksum32] = make(map[[sha256.Size]byte]Block)
 	}
-	f.BlockMap[b.Checksum32][b.Sha256hash] = b
+	f.BlockMap[b.Checksum32][b.Sha256hash] = *b
 
+}
+
+func readBlocks(r io.Reader, blocksize uint32) chan *Block {
+
+	blkin := make(chan *Block)
+	n, start := 0, int64(0)
+	go func() {
+		var err error
+		for err == nil {
+			bufz := make([]byte, blocksize)
+
+			n, err = r.Read(bufz)
+
+			if err == nil {
+				block := Block{Start: start, End: start + int64(n), RawBytes: bufz, HasData: true}
+				blkin <- &block
+				start += int64(n)
+			} else {
+				if err == io.EOF {
+					glog.V(2).Infoln("Fingerprint generation: Reader read complete")
+
+				} else {
+					glog.Fatal(err)
+				}
+
+			}
+		}
+		close(blkin)
+	}()
+	return blkin
+
+}
+
+func fillBlocks(in chan *Block) chan *Block {
+	out := make(chan *Block)
+	go func() {
+		for blkptr := range in {
+			buf := blkptr.RawBytes[0:(blkptr.End - blkptr.Start)]
+			blkptr.Checksum32 = adler32.Checksum(buf)
+			blkptr.Sha256hash = sha256.Sum256(buf)
+			blkptr.RawBytes = nil
+			blkptr.HasData = false
+			out <- blkptr
+		}
+		close(out)
+	}()
+	return out
 }
