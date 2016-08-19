@@ -6,6 +6,7 @@ This library provides binary diff and patch API in golang.
 #### Supported today:
 * Command line utilities to diff and patch binary files
 * Library for fingerprint generation, rolling hash and block matching
+* *NEW* : For large files, fingerprint generation automatically switches to parallel mode wherein multiple go routines are used concurrently. For files > 20 MB, there is an improvement of ~50% compared to sequential fingerprint generation. 
 
 Reference :
 [Rsync Algorithm] (https://rsync.samba.org/tech_report/node2.html)
