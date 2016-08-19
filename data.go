@@ -12,9 +12,19 @@ import (
 	"hash/adler32"
 	"io"
 	"os"
+	"sync"
 )
 
-var usefastfpgen = false
+var (
+	DEFAULT_GENERATOR = &FingerprintGenerator{ParallelMode: true, NumWorkers: 8}
+)
+
+type FingerprintGenerator struct {
+	Source       io.Reader
+	BlockSize    uint32
+	ParallelMode bool
+	NumWorkers   int
+}
 
 // Block represent a byte slice from the file. For each block, following are computed.
 //
@@ -55,12 +65,23 @@ func (f Fingerprint) String() string {
 	return buf
 }
 
-// NewFingerprint creates a Fingerprint for a given reader and blocksize
-func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
-	if usefastfpgen {
-		return NewFingerprintFast(r, blocksize)
+func (g *FingerprintGenerator) Generate() *Fingerprint {
+	if g.ParallelMode {
+		return g.genParallel()
+	} else {
+		return g.genSequential()
 	}
-	bufz := make([]byte, blocksize)
+}
+
+// NewFingerprint creates a Fingerprint for a given reader and blocksize
+func NewFingerprintFromReader(r io.Reader, blocksz uint32) *Fingerprint {
+	DEFAULT_GENERATOR.Source = r
+	DEFAULT_GENERATOR.BlockSize = blocksz
+	return DEFAULT_GENERATOR.Generate()
+
+}
+func (g *FingerprintGenerator) genSequential() *Fingerprint {
+	bufz := make([]byte, g.BlockSize)
 
 	n, start := 0, int64(0)
 
@@ -70,10 +91,10 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 	)
 
 	fngprt := Fingerprint{
-		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
+		Blocksz: g.BlockSize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
 
 	for err == nil {
-		n, err = r.Read(bufz)
+		n, err = g.Source.Read(bufz)
 		if err == nil {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
@@ -96,12 +117,12 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 }
 
 // NewFingerprint creates a Fingerprint for a given reader and blocksize
-func NewFingerprintFast(r io.Reader, blocksize uint32) *Fingerprint {
+func (g *FingerprintGenerator) genParallel() *Fingerprint {
 	fngprt := Fingerprint{
-		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
+		Blocksz: g.BlockSize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
 
-	blkin := readBlocks(r, blocksize)
-	blkout := fillBlocks(blkin)
+	blkin := readBlocks(g.Source, g.BlockSize, g.NumWorkers)
+	blkout := fillBlocks(blkin, g.NumWorkers)
 	for b := range blkout {
 		addBlock(&fngprt, b)
 	}
@@ -117,6 +138,7 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 		glog.Fatalf("Unable to open file %s %s", filename, e)
 	}
 	defer file.Close()
+
 	f := NewFingerprintFromReader(file, blocksize)
 	f.Source = filename
 	return f
@@ -133,12 +155,13 @@ func addBlock(f *Fingerprint, b *Block) {
 
 }
 
-func readBlocks(r io.Reader, blocksize uint32) chan *Block {
+func readBlocks(r io.Reader, blocksize uint32, numhashers int) chan *Block {
 
-	blkin := make(chan *Block)
+	blkin := make(chan *Block, numhashers)
 	n, start := 0, int64(0)
 	go func() {
 		var err error
+		defer close(blkin)
 		for err == nil {
 			bufz := make([]byte, blocksize)
 
@@ -158,23 +181,32 @@ func readBlocks(r io.Reader, blocksize uint32) chan *Block {
 
 			}
 		}
-		close(blkin)
+
 	}()
 	return blkin
 
 }
 
-func fillBlocks(in chan *Block) chan *Block {
+func fillBlocks(in chan *Block, numhashers int) chan *Block {
 	out := make(chan *Block)
+	var wg sync.WaitGroup
+
+	wg.Add(numhashers)
+	for i := 0; i < numhashers; i++ {
+		go func() {
+			for blkptr := range in {
+				buf := blkptr.RawBytes[0:(blkptr.End - blkptr.Start)]
+				blkptr.Checksum32 = adler32.Checksum(buf)
+				blkptr.Sha256hash = sha256.Sum256(buf)
+				blkptr.RawBytes = nil
+				blkptr.HasData = false
+				out <- blkptr
+			}
+			wg.Done()
+		}()
+	}
 	go func() {
-		for blkptr := range in {
-			buf := blkptr.RawBytes[0:(blkptr.End - blkptr.Start)]
-			blkptr.Checksum32 = adler32.Checksum(buf)
-			blkptr.Sha256hash = sha256.Sum256(buf)
-			blkptr.RawBytes = nil
-			blkptr.HasData = false
-			out <- blkptr
-		}
+		wg.Wait()
 		close(out)
 	}()
 	return out

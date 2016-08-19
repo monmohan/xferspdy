@@ -68,17 +68,18 @@ func TestNormalVsFastfpgen(t *testing.T) {
 	fmt.Println("==TestNormalVsFastfpgen==\n")
 
 	blksz := 1024
-	//basefile := "testdata/samplefile"
-	basefile := "/Users/msingh/Downloads/golang.mp4"
+	basefile := "testdata/largebinaryfile"
+	//basefile := "/Users/msingh/Downloads/golang.mp4"
 	bfile, _ := os.Open(basefile)
 	defer bfile.Close()
 	start := time.Now()
-	sign1 := NewFingerprintFromReader(bfile, uint32(blksz))
+	generator := &FingerprintGenerator{Source: bfile, ParallelMode: false, BlockSize: uint32(blksz)}
+	sign1 := generator.Generate()
 	fmt.Printf("Time taken in Seq mode: %s \n", time.Now().Sub(start))
 
 	bfile.Seek(0, 0)
 	st := time.Now()
-	sign2 := NewFingerprintFast(bfile, uint32(blksz))
+	sign2 := NewFingerprintFromReader(bfile, uint32(blksz))
 	fmt.Printf("Time taken in Fast mode: %s \n", time.Now().Sub(st))
 
 	if len(sign1.BlockMap) != len(sign2.BlockMap) {
