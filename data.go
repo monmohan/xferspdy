@@ -12,7 +12,19 @@ import (
 	"hash/adler32"
 	"io"
 	"os"
+	"sync"
 )
+
+var (
+	DEFAULT_GENERATOR = &FingerprintGenerator{ParallelMode: true, NumWorkers: 8}
+)
+
+type FingerprintGenerator struct {
+	Source       io.Reader
+	BlockSize    uint32
+	ParallelMode bool
+	NumWorkers   int
+}
 
 // Block represent a byte slice from the file. For each block, following are computed.
 //
@@ -53,9 +65,23 @@ func (f Fingerprint) String() string {
 	return buf
 }
 
+func (g *FingerprintGenerator) Generate() *Fingerprint {
+	if g.ParallelMode {
+		return g.genParallel()
+	} else {
+		return g.genSequential()
+	}
+}
+
 // NewFingerprint creates a Fingerprint for a given reader and blocksize
-func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
-	bufz := make([]byte, blocksize)
+func NewFingerprintFromReader(r io.Reader, blocksz uint32) *Fingerprint {
+	DEFAULT_GENERATOR.Source = r
+	DEFAULT_GENERATOR.BlockSize = blocksz
+	return DEFAULT_GENERATOR.Generate()
+
+}
+func (g *FingerprintGenerator) genSequential() *Fingerprint {
+	bufz := make([]byte, g.BlockSize)
 
 	n, start := 0, int64(0)
 
@@ -65,15 +91,15 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 	)
 
 	fngprt := Fingerprint{
-		Blocksz: blocksize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
+		Blocksz: g.BlockSize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
 
 	for err == nil {
-		n, err = r.Read(bufz)
+		n, err = g.Source.Read(bufz)
 		if err == nil {
 			block = Block{Start: start, End: start + int64(n),
 				Checksum32: adler32.Checksum(bufz[0:n]),
 				Sha256hash: sha256.Sum256(bufz[0:n])}
-			addBlock(&fngprt, block)
+			addBlock(&fngprt, &block)
 			start = block.End
 		} else {
 			if err == io.EOF {
@@ -90,6 +116,21 @@ func NewFingerprintFromReader(r io.Reader, blocksize uint32) *Fingerprint {
 
 }
 
+// NewFingerprint creates a Fingerprint for a given reader and blocksize
+func (g *FingerprintGenerator) genParallel() *Fingerprint {
+	fngprt := Fingerprint{
+		Blocksz: g.BlockSize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
+
+	blkin := readBlocks(g.Source, g.BlockSize, g.NumWorkers)
+	blkout := fillBlocks(blkin, g.NumWorkers)
+	for b := range blkout {
+		addBlock(&fngprt, b)
+	}
+
+	return &fngprt
+
+}
+
 // NewFingerprint creates a Fingerprint for a given file and blocksize
 func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 	file, e := os.Open(filename)
@@ -97,17 +138,76 @@ func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 		glog.Fatalf("Unable to open file %s %s", filename, e)
 	}
 	defer file.Close()
+
 	f := NewFingerprintFromReader(file, blocksize)
 	f.Source = filename
 	return f
 
 }
 
-func addBlock(f *Fingerprint, b Block) {
-	glog.V(3).Infof("Adding Block %v ", b)
+func addBlock(f *Fingerprint, b *Block) {
+
+	glog.V(3).Infof("Adding Block %v ", *b)
 	if sha2blk := f.BlockMap[b.Checksum32]; sha2blk == nil {
 		f.BlockMap[b.Checksum32] = make(map[[sha256.Size]byte]Block)
 	}
-	f.BlockMap[b.Checksum32][b.Sha256hash] = b
+	f.BlockMap[b.Checksum32][b.Sha256hash] = *b
 
+}
+
+func readBlocks(r io.Reader, blocksize uint32, numhashers int) chan *Block {
+
+	blkin := make(chan *Block, numhashers)
+	n, start := 0, int64(0)
+	go func() {
+		var err error
+		defer close(blkin)
+		for err == nil {
+			bufz := make([]byte, blocksize)
+
+			n, err = r.Read(bufz)
+
+			if err == nil {
+				block := Block{Start: start, End: start + int64(n), RawBytes: bufz, HasData: true}
+				blkin <- &block
+				start += int64(n)
+			} else {
+				if err == io.EOF {
+					glog.V(2).Infoln("Fingerprint generation: Reader read complete")
+
+				} else {
+					glog.Fatal(err)
+				}
+
+			}
+		}
+
+	}()
+	return blkin
+
+}
+
+func fillBlocks(in chan *Block, numhashers int) chan *Block {
+	out := make(chan *Block)
+	var wg sync.WaitGroup
+
+	wg.Add(numhashers)
+	for i := 0; i < numhashers; i++ {
+		go func() {
+			for blkptr := range in {
+				buf := blkptr.RawBytes[0:(blkptr.End - blkptr.Start)]
+				blkptr.Checksum32 = adler32.Checksum(buf)
+				blkptr.Sha256hash = sha256.Sum256(buf)
+				blkptr.RawBytes = nil
+				blkptr.HasData = false
+				out <- blkptr
+			}
+			wg.Done()
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
 }
