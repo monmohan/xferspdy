@@ -65,15 +65,17 @@ func TestRollingChecksum(t *testing.T) {
 }
 
 func TestNormalVsFastfpgen(t *testing.T) {
-	fmt.Println("==TestNormalVsFastfpgen==\n")
+	fmt.Println("==TestNormalVsFastfpgen==")
 
 	blksz := 1024
 	basefile := "testdata/largebinaryfile"
-	//basefile := "/Users/msingh/Downloads/golang.mp4"
 	bfile, _ := os.Open(basefile)
 	defer bfile.Close()
+	fileInfo, _ := bfile.Stat()
+	numblocks := (fileInfo.Size() / int64(blksz))
+	fmt.Printf("numblocks %d\n", numblocks)
 	start := time.Now()
-	generator := &FingerprintGenerator{Source: bfile, ParallelMode: false, BlockSize: uint32(blksz)}
+	generator := &FingerprintGenerator{Source: bfile, ConcurrentMode: false, BlockSize: uint32(blksz)}
 	sign1 := generator.Generate()
 	fmt.Printf("Time taken in Seq mode: %s \n", time.Now().Sub(start))
 

@@ -16,14 +16,14 @@ import (
 )
 
 var (
-	DEFAULT_GENERATOR = &FingerprintGenerator{ParallelMode: true, NumWorkers: 8}
+	DEFAULT_GENERATOR = &FingerprintGenerator{ConcurrentMode: true, NumWorkers: 8}
 )
 
 type FingerprintGenerator struct {
-	Source       io.Reader
-	BlockSize    uint32
-	ParallelMode bool
-	NumWorkers   int
+	Source         io.Reader
+	BlockSize      uint32
+	ConcurrentMode bool
+	NumWorkers     int
 }
 
 // Block represent a byte slice from the file. For each block, following are computed.
@@ -41,7 +41,7 @@ type Block struct {
 	RawBytes   []byte
 }
 
-// Fingerprint of a given File, encapsulates the following mapping
+// Fingerprint of a given File, encapsulates the following mapping -
 //   Adler-32 hash of Block --> SHA256 hash of Block -->Block
 // Also stores the block size and the source
 type Fingerprint struct {
@@ -65,15 +65,23 @@ func (f Fingerprint) String() string {
 	return buf
 }
 
+// Generate creates a finger print using the FingerprintGenerator.
+// Processing i.e. concurrent or sequential depends on the generator field ConcurrentMode
 func (g *FingerprintGenerator) Generate() *Fingerprint {
-	if g.ParallelMode {
-		return g.genParallel()
+	if g.ConcurrentMode {
+		return g.genConcurrent()
 	} else {
 		return g.genSequential()
 	}
 }
 
-// NewFingerprint creates a Fingerprint for a given reader and blocksize
+// NewFingerprint creates a Fingerprint for a given reader and blocksize.
+// By default it does concurrent processing of blocks to generate fingerprint.
+// However if the number of blocks is small <50 , then caller should use sequential generation,
+// since the concurrent processing would not add much value.
+// Or use the function NewFingerrprint(file, blocksize) when dealing with files, which switches
+// mode based on the number of blocks.
+// Number of blocks can be calculated as file size/block size
 func NewFingerprintFromReader(r io.Reader, blocksz uint32) *Fingerprint {
 	DEFAULT_GENERATOR.Source = r
 	DEFAULT_GENERATOR.BlockSize = blocksz
@@ -116,8 +124,8 @@ func (g *FingerprintGenerator) genSequential() *Fingerprint {
 
 }
 
-// NewFingerprint creates a Fingerprint for a given reader and blocksize
-func (g *FingerprintGenerator) genParallel() *Fingerprint {
+// NewFingerprint creates a Fingerprint for a given reader and blocksize.
+func (g *FingerprintGenerator) genConcurrent() *Fingerprint {
 	fngprt := Fingerprint{
 		Blocksz: g.BlockSize, BlockMap: make(map[uint32]map[[sha256.Size]byte]Block)}
 
@@ -131,20 +139,34 @@ func (g *FingerprintGenerator) genParallel() *Fingerprint {
 
 }
 
-// NewFingerprint creates a Fingerprint for a given file and blocksize
+// NewFingerprint creates a Fingerprint for a given file and blocksize.
+// By default it does concurrent processing of blocks to generate fingerprint.
+// The generation is switched to sequential mode if the number of blocks is less than 50.
 func NewFingerprint(filename string, blocksize uint32) *Fingerprint {
 	file, e := os.Open(filename)
+	defer file.Close()
 	if e != nil {
 		glog.Fatalf("Unable to open file %s %s", filename, e)
 	}
-	defer file.Close()
+	fileInfo, _ := file.Stat()
+	numblocks := (fileInfo.Size() / int64(blocksize))
+	var f *Fingerprint
+	if numblocks < 50 {
+		//switch to sequential mode
+		g := &FingerprintGenerator{Source: file, ConcurrentMode: false, BlockSize: blocksize}
+		f = g.Generate()
 
-	f := NewFingerprintFromReader(file, blocksize)
+	} else {
+		//use default generator
+		f = NewFingerprintFromReader(file, blocksize)
+	}
+
 	f.Source = filename
 	return f
 
 }
 
+// addBlock adds the hashed block to the Fingerprint struct
 func addBlock(f *Fingerprint, b *Block) {
 
 	glog.V(3).Infof("Adding Block %v ", *b)
@@ -155,6 +177,9 @@ func addBlock(f *Fingerprint, b *Block) {
 
 }
 
+// readBlocks reads blocksize bytes from the reader into memory
+// numhashers determines the buffer size of the output channel where the method places the blocks which
+// been read in
 func readBlocks(r io.Reader, blocksize uint32, numhashers int) chan *Block {
 
 	blkin := make(chan *Block, numhashers)
@@ -187,6 +212,8 @@ func readBlocks(r io.Reader, blocksize uint32, numhashers int) chan *Block {
 
 }
 
+// fillBlocks takes an input channel with the bytes read from disk and creates the Checksum and SHAHashes
+// numworkers is the number of go routines used for processing
 func fillBlocks(in chan *Block, numhashers int) chan *Block {
 	out := make(chan *Block)
 	var wg sync.WaitGroup
