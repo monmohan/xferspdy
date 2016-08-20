@@ -84,20 +84,10 @@ func TestNormalVsFastfpgen(t *testing.T) {
 	sign2 := NewFingerprintFromReader(bfile, uint32(blksz))
 	fmt.Printf("Time taken in Fast mode: %s \n", time.Now().Sub(st))
 
-	if len(sign1.BlockMap) != len(sign2.BlockMap) {
-		t.Errorf("Fingerprint size don't match %v, %v \n", len(sign1.BlockMap), len(sign2.BlockMap))
-		t.FailNow()
-	}
-
-	for csum32, innermap := range sign2.BlockMap {
-		for sha256, blk := range innermap {
-			if b, ok := matchBlock(csum32, sha256, *sign1); !(ok && (b.Start == blk.Start && b.End == blk.End)) {
-				t.Errorf("failed block match %v \n at blk %v ", b, blk)
-				t.FailNow()
-			}
-
-		}
-
+	if sign1.DeepEqual(sign2) {
+		fmt.Printf("Signature matched %s %s \n", sign1.Source, sign2.Source)
+	} else {
+		t.Fail()
 	}
 
 }

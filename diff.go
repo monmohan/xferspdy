@@ -113,7 +113,7 @@ func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Fingerprint) (mbloc
 }
 
 func (f *Fingerprint) DeepEqual(other *Fingerprint) bool {
-	eq := (f.Source == other.Source) && (f.Blocksz == other.Blocksz) && len(f.BlockMap) == len(other.BlockMap)
+	eq := (f.Blocksz == other.Blocksz) && len(f.BlockMap) == len(other.BlockMap)
 	if !eq {
 		glog.Errorf("Fingerprints don't match, 1) source =%s, blocksz=%d, block map size=%d\n 2)source =%s, blocksz=%d, block map size=%d\n",
 			f.Source, f.Blocksz, len(f.BlockMap), other.Source, other.Blocksz, len(other.BlockMap))
@@ -122,8 +122,10 @@ func (f *Fingerprint) DeepEqual(other *Fingerprint) bool {
 	if eq {
 		for _, shablkmap := range f.BlockMap {
 			for _, blk := range shablkmap {
-				if _, eq = matchBlock(blk.Checksum32, blk.Sha256hash, *other); !eq {
-					return eq
+				var matched Block
+				matched, eq = matchBlock(blk.Checksum32, blk.Sha256hash, *other)
+				if !(eq && (matched.Start == blk.Start) && (matched.End == blk.End)) {
+					return false
 				}
 
 			}
