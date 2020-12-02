@@ -8,11 +8,12 @@ package xferspdy
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/golang/glog"
 	"hash/adler32"
 	"io"
 	"os"
 	"sync"
+
+	"github.com/golang/glog"
 )
 
 var (
@@ -75,7 +76,7 @@ func (g *FingerprintGenerator) Generate() *Fingerprint {
 	}
 }
 
-// NewFingerprint creates a Fingerprint for a given reader and blocksize.
+// NewFingerprintFromReader creates a Fingerprint for a given reader and blocksize.
 // By default it does concurrent processing of blocks to generate fingerprint.
 // However if the number of blocks is small <50 , then caller should use sequential generation,
 // since the concurrent processing would not add much value.

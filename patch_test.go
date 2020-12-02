@@ -6,14 +6,13 @@ package xferspdy
 import (
 	"flag"
 	"fmt"
-	"github.com/golang/glog"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
-)
 
-//var logLevel = flag.Int("lv", 3, "log level")
+	"github.com/golang/glog"
+)
 
 func TestFilePatchSimpleText(t *testing.T) {
 	otext := []byte(`Go is building a garbage collector (GC) not only for 2015 but for 2025 and beyond: 
@@ -58,33 +57,50 @@ func TestFilePatchSimpleText(t *testing.T) {
 	glog.Flush()
 }
 
-func TestFilePatchWordDocument(t *testing.T) {
-	fmt.Println("Test to patch a word document")
+type TestFiles struct {
+	baseFile     string
+	modifiedFile string
+	patchedFile  string
+}
+
+func TestPatchManyFiles(t *testing.T) {
+	testdata := []TestFiles{
+		{"testdata/doc_v1.docx", "testdata/doc_v2.docx", "/tmp/doc_patched.docx"},
+		{"testdata/samplepdf.pdf", "testdata/samplepdf_v2.pdf", "/tmp/samplepdf_patched.pdf"},
+		{"testdata/sampleimg.jpg", "testdata/sampleimg_v2.jpg", "/tmp/sampleimg_patched.jpg"},
+	}
 	fmt.Printf("log level %v\n", *logLevel)
 	flag.Lookup("v").Value.Set(fmt.Sprint(*logLevel))
 	blksz := 2048
 
-	ofname := "testdata/doc_v1.docx"
-	sign := NewFingerprint(ofname, uint32(blksz))
-	glog.V(4).Infof("Fingerprint for file %v\n %v\n", ofname, *sign)
+	for _, v := range testdata {
+		fmt.Printf("Test to patch %s\n", v.baseFile)
+		sign := NewFingerprint(v.baseFile, uint32(blksz))
+		glog.V(4).Infof("Fingerprint for file %v\n %v\n", v.baseFile, *sign)
 
-	nfname := "testdata/doc_v2.docx"
-	delta := NewDiff(nfname, *sign)
-	glog.V(4).Infof("Delta = %v ", delta)
+		delta := NewDiff(v.modifiedFile, *sign)
+		glog.V(4).Infof("Delta = %v ", delta)
 
-	expfname := "/tmp/doc_patched.docx"
-	expfile, _ := os.OpenFile(expfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
-	defer expfile.Close()
-	Patch(delta, *sign, expfile)
-	//read from new file and delta and compare file bytes
-	nr, _ := os.Open(nfname)
-	er, _ := os.Open(expfname)
-	nbytes, _ := ioutil.ReadAll(nr)
-	expbytes, _ := ioutil.ReadAll(er)
-	if !reflect.DeepEqual(expbytes, nbytes) {
-		t.Fatalf("bytes don't match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
-	} else {
-		glog.V(4).Infof("bytes match after patch nbytes=%v\n exp=%v\n", nbytes, expbytes)
+		patchedFile, _ := os.OpenFile(v.patchedFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
+		defer patchedFile.Close()
+		Patch(delta, *sign, patchedFile)
+		//read from new file and delta and compare file bytes
+		br, _ := os.Open(v.baseFile)
+		nr, _ := os.Open(v.modifiedFile)
+		er, _ := os.Open(v.patchedFile)
+		originalBytes, _ := ioutil.ReadAll(br)
+		v2Bytes, _ := ioutil.ReadAll(nr)
+		patchedBytes, _ := ioutil.ReadAll(er)
+		mustMatch := reflect.DeepEqual(patchedBytes, v2Bytes)
+		mustNotMatch := reflect.DeepEqual(patchedBytes, originalBytes)
+		if !mustMatch {
+			t.Fatalf("Patched Bytes from File %s , don't match the v2 file %s", v.patchedFile, v.modifiedFile)
+		}
+		if mustNotMatch {
+			t.Fatalf("Patched Bytes from File %s , match the v1 file %s", v.patchedFile, v.baseFile)
+		}
+		fmt.Printf("Matching succeeded base =%s, modified=%s, patched=%s\n", v.baseFile, v.modifiedFile, v.patchedFile)
+
+		glog.Flush()
 	}
-	glog.Flush()
 }
