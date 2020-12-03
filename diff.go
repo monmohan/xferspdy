@@ -6,9 +6,10 @@ package xferspdy
 
 import (
 	"crypto/sha256"
-	"github.com/golang/glog"
 	"io"
 	"os"
+
+	"github.com/golang/glog"
 )
 
 // NewDiff computes a diff between a given file and Fingerprint created from some other file
@@ -24,12 +25,21 @@ func NewDiff(filename string, sign Fingerprint) []Block {
 	finfo, _ := file.Stat()
 
 	var delta []Block
-	processBlock(file, 0, finfo.Size(), sign, &delta)
+	processDiff(file, finfo.Size(), sign, &delta)
+
 	glog.V(3).Infof("Delta created %v\n", delta)
 	return delta
 }
 
-func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[]Block) {
+type processingResult struct {
+	blockMatch   bool
+	matchedBlock Block
+	windowState  *State
+	readPtr      int64
+	eof          bool
+}
+
+func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[]Block) processingResult {
 
 	blksz := int64(s.Blocksz)
 	brem := int64(blksz)
@@ -40,7 +50,7 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[
 	glog.V(4).Infof("Delta %v \n", *delta)
 	if brem == 0 {
 		glog.V(2).Infof("All read\n ")
-		return
+		return processingResult{false, Block{}, nil, rptr, true}
 	}
 
 	buf := make([]byte, brem)
@@ -51,20 +61,11 @@ func processBlock(r io.Reader, rptr int64, filesz int64, s Fingerprint, delta *[
 
 	checksum, state := Checksum(buf)
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(buf), s)
-	if matched {
-		glog.V(3).Infof("Matched block %v \n", matchblock)
-		*delta = append(*delta, matchblock)
-		rptr += int64(brem)
-		processBlock(r, rptr, filesz, s, delta)
-	} else {
-		glog.V(3).Infof("Block not matched\n")
-		*delta = append(*delta, Block{HasData: true, Start: rptr})
-		processRolling(r, state, rptr, filesz, s, delta)
-	}
+	return processingResult{matched, matchblock, state, rptr, false}
 
 }
 
-func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerprint, delta *[]Block) {
+func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerprint, delta *[]Block) processingResult {
 
 	diff := *delta
 	db := &diff[len(diff)-1]
@@ -78,7 +79,7 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerpr
 		db.RawBytes = append(db.RawBytes, st.window...)
 		*delta = diff
 		glog.V(4).Infof("db.RawBytes %v \n", db.RawBytes)
-		return
+		return processingResult{false, Block{}, nil, rptr, true}
 	}
 	fb := st.window[0]
 	db.RawBytes = append(db.RawBytes, fb)
@@ -90,13 +91,51 @@ func processRolling(r io.Reader, st *State, rptr int64, filesz int64, s Fingerpr
 	rptr++
 	checksum := st.UpdateWindow(b[0])
 	matchblock, matched := matchBlock(checksum, sha256.Sum256(st.window), s)
-	if matched {
-		*delta = append(diff, matchblock)
-		rptr += int64(len(st.window))
-		processBlock(r, rptr, filesz, s, delta)
-	} else {
-		processRolling(r, st, rptr, filesz, s, delta)
+	return processingResult{matched, matchblock, st, rptr, false}
+}
+
+func processDiff(r io.Reader, filesz int64, s Fingerprint, delta *[]Block) {
+
+	var (
+		state     *State
+		rptr      int64
+		result    processingResult
+		blockMode bool
+	)
+	blockMode = true
+	for {
+		if blockMode {
+			result = processBlock(r, rptr, filesz, s, delta)
+			rptr = result.readPtr
+			state = result.windowState
+			if result.eof {
+				return
+			}
+			if result.blockMatch {
+				*delta = append(*delta, result.matchedBlock)
+				rptr += int64(len(state.window))
+				continue
+			}
+			glog.V(3).Infof("Block not matched\n")
+			*delta = append(*delta, Block{HasData: true, Start: rptr})
+			blockMode = false
+		}
+		result = processRolling(r, state, rptr, filesz, s, delta)
+		rptr = result.readPtr
+		state = result.windowState
+
+		if result.eof {
+			return
+		}
+		if result.blockMatch {
+			*delta = append(*delta, result.matchedBlock)
+			rptr += int64(len(state.window))
+			blockMode = true
+			continue
+		}
+
 	}
+
 }
 
 func matchBlock(checksum uint32, sha256 [sha256.Size]byte, s Fingerprint) (mblock Block, matched bool) {
