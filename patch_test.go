@@ -14,7 +14,15 @@ import (
 	"github.com/golang/glog"
 )
 
-func TestFilePatchSimpleText(t *testing.T) {
+func TestFilePatchSimpleTextOld(t *testing.T) {
+	filePatchSimpleText(t, DiffFnOld, PatchFnOld)
+}
+
+func TestFilePatchSimpleTextOptimal(t *testing.T) {
+	filePatchSimpleText(t, DiffFnOpitmal, PatchFnOptimal)
+}
+
+func filePatchSimpleText(t *testing.T, diffFn DiffFunc, patchFn PatchFunc) {
 	otext := []byte(`Go is building a garbage collector (GC) not only for 2015 but for 2025 and beyond: 
 		A GC that supports today’s software development and scales along with new software and hardware throughout the next decade. 
 		Such a future has no place for stop-the-world GC pauses, which have been an 
@@ -37,13 +45,13 @@ func TestFilePatchSimpleText(t *testing.T) {
 	nfile, _ := os.OpenFile(nfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	nfile.Write(mtext)
 	defer nfile.Close()
-	delta := NewDiff(nfname, *sign)
+	delta := diffFn(nfname, *sign)
 	glog.V(4).Infof("Delta = %v ", delta)
 
 	expfname := "/tmp/TextFilePatchSimple_2"
 	expfile, _ := os.OpenFile(expfname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 	defer expfile.Close()
-	Patch(delta, *sign, expfile)
+	patchFn(delta, *sign, expfile)
 	//read from new file and delta and compare file bytes
 	nr, _ := os.Open(nfname)
 	er, _ := os.Open(expfname)
@@ -63,7 +71,15 @@ type TestFiles struct {
 	patchedFile  string
 }
 
-func TestPatchManyFiles(t *testing.T) {
+func TestPatchManyFilesOld(t *testing.T) {
+	patchManyFiles(t, DiffFnOld, PatchFnOld)
+}
+
+func TestPatchManyFilesOptimal(t *testing.T) {
+	patchManyFiles(t, DiffFnOpitmal, PatchFnOptimal)
+}
+
+func patchManyFiles(t *testing.T, diffFn DiffFunc, patchFn PatchFunc) {
 	testdata := []TestFiles{
 		{"testdata/doc_v1.docx", "testdata/doc_v2.docx", "/tmp/doc_patched.docx"},
 		{"testdata/samplepdf.pdf", "testdata/samplepdf_v2.pdf", "/tmp/samplepdf_patched.pdf"},
@@ -78,12 +94,12 @@ func TestPatchManyFiles(t *testing.T) {
 		sign := NewFingerprint(v.baseFile, uint32(blksz))
 		glog.V(4).Infof("Fingerprint for file %v\n %v\n", v.baseFile, *sign)
 
-		delta := NewDiff(v.modifiedFile, *sign)
+		delta := diffFn(v.modifiedFile, *sign)
 		glog.V(4).Infof("Delta = %v ", delta)
 
 		patchedFile, _ := os.OpenFile(v.patchedFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0777)
 		defer patchedFile.Close()
-		Patch(delta, *sign, patchedFile)
+		patchFn(delta, *sign, patchedFile)
 		//read from new file and delta and compare file bytes
 		br, _ := os.Open(v.baseFile)
 		nr, _ := os.Open(v.modifiedFile)
